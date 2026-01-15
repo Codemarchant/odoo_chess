@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Actions must be defined before menus that reference them -->
+
+    <!-- Bot Configuration Action -->
+    <record id="action_chess_bots" model="ir.actions.act_window">
+        <field name="name">Chess Bots</field>
+        <field name="res_model">chess.bot</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Odoo Facts Action -->
+    <record id="action_chess_facts" model="ir.actions.act_window">
+        <field name="name">Odoo Facts</field>
+        <field name="res_model">chess.odoo.fact</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Main Chess Menu -->
+    <menuitem id="menu_chess_root"
+              name="Chess"
+              web_icon="odoo_chess,static/description/icon.png"
+              groups="odoo_chess.group_chess_user"
+              sequence="100"/>
+
+    <!-- Play Submenu -->
+    <menuitem id="menu_chess_play"
+              name="Play"
+              parent="menu_chess_root"
+              sequence="10"/>
+
+    <menuitem id="menu_chess_my_games"
+              name="My Games"
+              parent="menu_chess_play"
+              action="action_chess_games"
+              sequence="10"/>
+
+    <menuitem id="menu_chess_new_game"
+              name="New Game"
+              parent="menu_chess_play"
+              action="action_chess_create_game"
+              sequence="20"/>
+
+    <menuitem id="menu_chess_invitations"
+              name="Invitations"
+              parent="menu_chess_play"
+              action="action_chess_invitations"
+              sequence="30"/>
+
+    <!-- Leaderboard Submenu -->
+    <menuitem id="menu_chess_rankings"
+              name="Rankings"
+              parent="menu_chess_root"
+              sequence="20"/>
+
+    <menuitem id="menu_chess_leaderboard"
+              name="Leaderboard"
+              parent="menu_chess_rankings"
+              action="action_chess_leaderboard"
+              sequence="10"/>
+
+    <menuitem id="menu_chess_statistics"
+              name="Statistics"
+              parent="menu_chess_rankings"
+              action="action_chess_statistics"
+              sequence="20"/>
+
+    <!-- Configuration Submenu (Manager only) -->
+    <menuitem id="menu_chess_config"
+              name="Configuration"
+              parent="menu_chess_root"
+              groups="odoo_chess.group_chess_manager"
+              sequence="90"/>
+
+    <menuitem id="menu_chess_bots"
+              name="Bots"
+              parent="menu_chess_config"
+              action="action_chess_bots"
+              sequence="10"/>
+
+    <menuitem id="menu_chess_facts"
+              name="Odoo Facts"
+              parent="menu_chess_config"
+              action="action_chess_facts"
+              sequence="20"/>
+
+    <menuitem id="menu_chess_all_games"
+              name="All Games"
+              parent="menu_chess_config"
+              action="action_chess_games_all"
+              sequence="30"/>
+
+    <!-- Bot Views -->
+    <record id="view_chess_bot_list" model="ir.ui.view">
+        <field name="name">chess.bot.list</field>
+        <field name="model">chess.bot</field>
+        <field name="arch" type="xml">
+            <list string="Chess Bots">
+                <field name="name"/>
+                <field name="difficulty"/>
+                <field name="rating"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_chess_bot_form" model="ir.ui.view">
+        <field name="name">chess.bot.form</field>
+        <field name="model">chess.bot</field>
+        <field name="arch" type="xml">
+            <form string="Chess Bot">
+                <sheet>
+                    <field name="avatar" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Bot Name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="difficulty"/>
+                            <field name="rating"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Description of this bot..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Odoo Facts Views -->
+    <record id="view_chess_fact_list" model="ir.ui.view">
+        <field name="name">chess.odoo.fact.list</field>
+        <field name="model">chess.odoo.fact</field>
+        <field name="arch" type="xml">
+            <list string="Odoo Facts" editable="bottom">
+                <field name="fact"/>
+                <field name="category"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_chess_fact_form" model="ir.ui.view">
+        <field name="name">chess.odoo.fact.form</field>
+        <field name="model">chess.odoo.fact</field>
+        <field name="arch" type="xml">
+            <form string="Odoo Fact">
+                <sheet>
+                    <group>
+                        <field name="fact"/>
+                        <field name="category"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

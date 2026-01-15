@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="odoo_chess.ChessBoard">
+        <div class="o_chess_board_wrapper">
+            <!-- Game Status -->
+            <div class="o_chess_status mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span t-att-class="turnIndicatorClass">
+                        <t t-esc="turnIndicator"/>
+                    </span>
+                    <span t-if="state.isCheck and !state.gameOver" class="badge bg-danger">
+                        Check!
+                    </span>
+                </div>
+            </div>
+
+            <!-- Chessboard Container -->
+            <div class="o_chess_board_container mb-3">
+                <div t-ref="board" class="o_chess_board"/>
+            </div>
+
+            <!-- Game Controls (only if game is active) -->
+            <div t-if="!state.gameOver" class="o_chess_controls mb-3">
+                <div class="btn-group" role="group">
+                    <button t-if="state.isMyTurn and !state.drawOffered"
+                            class="btn btn-outline-warning btn-sm"
+                            t-on-click="onOfferDraw">
+                        <i class="fa fa-handshake-o"/> Offer Draw
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm"
+                            t-on-click="onResign">
+                        <i class="fa fa-flag"/> Resign
+                    </button>
+                </div>
+
+                <!-- Draw Offer Response -->
+                <div t-if="state.drawOffered" class="alert alert-info mt-2" role="alert">
+                    <strong>Draw Offered!</strong>
+                    <div class="mt-2">
+                        <button class="btn btn-success btn-sm me-2" t-on-click="onAcceptDraw">
+                            Accept
+                        </button>
+                        <button class="btn btn-secondary btn-sm" t-on-click="onDeclineDraw">
+                            Decline
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Move Display -->
+            <div t-if="state.lastMove" class="o_chess_last_move text-muted small mb-2">
+                Last move: <t t-esc="state.lastMove.from"/> → <t t-esc="state.lastMove.to"/>
+            </div>
+
+            <!-- Odoo Fun Fact -->
+            <div t-if="state.currentFact" class="o_chess_fact card bg-light mt-3">
+                <div class="card-body py-2">
+                    <small class="text-muted">
+                        <i class="fa fa-lightbulb-o me-1"/>
+                        <t t-esc="state.currentFact"/>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Module Category -->
+    <record id="module_category_chess" model="ir.module.category">
+        <field name="name">Chess</field>
+        <field name="description">Odoo Chess Game</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <!-- Groups Privilege (Odoo 19 structure) -->
+    <record model="res.groups.privilege" id="res_groups_privilege_chess">
+        <field name="name">Odoo Chess</field>
+        <field name="sequence">50</field>
+        <field name="category_id" ref="module_category_chess"/>
+    </record>
+
+    <!-- Security Groups -->
+    <record id="group_chess_user" model="res.groups">
+        <field name="name">Chess Player</field>
+        <field name="privilege_id" ref="res_groups_privilege_chess"/>
+        <field name="comment">Can play chess games, view leaderboard</field>
+    </record>
+
+    <record id="group_chess_manager" model="res.groups">
+        <field name="name">Chess Manager</field>
+        <field name="privilege_id" ref="res_groups_privilege_chess"/>
+        <field name="comment">Can manage bots, view all games, manage facts</field>
+        <field name="implied_ids" eval="[(4, ref('group_chess_user'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Record Rules -->
+
+    <!-- Chess Game Rules -->
+    <record id="chess_game_rule_user" model="ir.rule">
+        <field name="name">Chess Game - Players can see their own games</field>
+        <field name="model_id" ref="model_chess_game"/>
+        <field name="groups" eval="[(4, ref('group_chess_user'))]"/>
+        <field name="domain_force">['|', ('white_player_id', '=', user.id), ('black_player_id', '=', user.id)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+    <record id="chess_game_rule_manager" model="ir.rule">
+        <field name="name">Chess Game - Manager can see all games</field>
+        <field name="model_id" ref="model_chess_game"/>
+        <field name="groups" eval="[(4, ref('group_chess_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">1</field>
+    </record>
+
+    <!-- Chess Invitation Rules -->
+    <record id="chess_invitation_rule_user" model="ir.rule">
+        <field name="name">Chess Invitation - Users can see their invitations</field>
+        <field name="model_id" ref="model_chess_invitation"/>
+        <field name="groups" eval="[(4, ref('group_chess_user'))]"/>
+        <field name="domain_force">['|', ('inviter_id', '=', user.id), ('invitee_id', '=', user.id)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">1</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+    <!-- Chess Move Rules -->
+    <record id="chess_move_rule_user" model="ir.rule">
+        <field name="name">Chess Move - Users can see moves of their games</field>
+        <field name="model_id" ref="model_chess_move"/>
+        <field name="groups" eval="[(4, ref('group_chess_user'))]"/>
+        <field name="domain_force">['|', ('game_id.white_player_id', '=', user.id), ('game_id.black_player_id', '=', user.id)]</field>
+        <field name="perm_read">1</field>
+        <field name="perm_write">0</field>
+        <field name="perm_create">1</field>
+        <field name="perm_unlink">0</field>
+    </record>
+
+</odoo>

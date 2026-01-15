@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Action to challenge a user (must be defined before view that references it) -->
+    <record id="action_chess_challenge_user" model="ir.actions.act_window">
+        <field name="name">Challenge to Chess</field>
+        <field name="res_model">chess.create.game</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_opponent_id': active_id, 'default_game_type': 'human'}</field>
+    </record>
+
+    <!-- Extend res.users form to show chess stats -->
+    <record id="view_users_form_chess" model="ir.ui.view">
+        <field name="name">res.users.form.chess</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Chess Stats" name="chess_stats">
+                    <group>
+                        <group string="Rating">
+                            <field name="chess_rating"/>
+                        </group>
+                        <group string="Record">
+                            <field name="chess_wins"/>
+                            <field name="chess_losses"/>
+                            <field name="chess_draws"/>
+                            <field name="chess_games_played"/>
+                        </group>
+                    </group>
+                    <group>
+                        <button name="%(action_chess_challenge_user)d" type="action"
+                                string="Challenge to Chess" class="btn-primary"
+                                icon="fa-trophy"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

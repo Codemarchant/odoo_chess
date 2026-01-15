@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Odoo History Facts -->
+        <record id="fact_history_1" model="chess.odoo.fact">
+            <field name="fact">Odoo was originally called TinyERP when founded in 2005 by Fabien Pinckaers in Belgium.</field>
+            <field name="category">history</field>
+        </record>
+
+        <record id="fact_history_2" model="chess.odoo.fact">
+            <field name="fact">The name "Odoo" was chosen in 2014 and is meant to sound friendly and approachable!</field>
+            <field name="category">history</field>
+        </record>
+
+        <record id="fact_history_3" model="chess.odoo.fact">
+            <field name="fact">Odoo S.A. is headquartered in Grand-Rosière, Belgium - a small village with big software ambitions!</field>
+            <field name="category">history</field>
+        </record>
+
+        <record id="fact_history_4" model="chess.odoo.fact">
+            <field name="fact">Odoo has over 12 million users worldwide and is used in 120+ countries.</field>
+            <field name="category">history</field>
+        </record>
+
+        <!-- Odoo Feature Facts -->
+        <record id="fact_feature_1" model="chess.odoo.fact">
+            <field name="fact">The OWL framework (Odoo Web Library) powers all modern Odoo frontend components - including this chess game!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_2" model="chess.odoo.fact">
+            <field name="fact">Odoo's longpolling bus allows real-time updates without page refreshes - that's how you see your opponent's moves instantly!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_3" model="chess.odoo.fact">
+            <field name="fact">Odoo has 82+ official apps and over 50,000 community apps on the Odoo App Store!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_4" model="chess.odoo.fact">
+            <field name="fact">The mail.thread mixin provides automatic activity tracking - that's why game invitations show up in your activities!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_5" model="chess.odoo.fact">
+            <field name="fact">Odoo's ORM supports computed fields with dependencies - like how the current player is automatically calculated from the FEN position!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <!-- Usage Tips -->
+        <record id="fact_tip_1" model="chess.odoo.fact">
+            <field name="fact">Pro tip: Use Ctrl+K anywhere in Odoo to open the command palette for quick navigation!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_2" model="chess.odoo.fact">
+            <field name="fact">Did you know? You can click on most field labels in Odoo forms to access field-specific actions!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_3" model="chess.odoo.fact">
+            <field name="fact">Odoo tip: Use the "/" key in text fields to access quick formatting and block insertion options!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_4" model="chess.odoo.fact">
+            <field name="fact">Press "?" in most Odoo views to see available keyboard shortcuts for that view!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <!-- Fun Facts -->
+        <record id="fact_fun_1" model="chess.odoo.fact">
+            <field name="fact">The Odoo mascot is an elephant named "Odie" - because elephants never forget your data!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_2" model="chess.odoo.fact">
+            <field name="fact">Odoo Experience is the largest annual business software conference in Europe, held in Brussels!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_3" model="chess.odoo.fact">
+            <field name="fact">The Odoo Community Association (OCA) has contributed over 2,500 modules to the Odoo ecosystem!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_4" model="chess.odoo.fact">
+            <field name="fact">Odoo's purple color (#714B67) is actually called "Odoo Purple" and represents creativity and innovation!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_5" model="chess.odoo.fact">
+            <field name="fact">While you're playing chess, somewhere an Odoo developer is probably fixing a bug - or creating a new feature!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <!-- Chess + Odoo Facts -->
+        <record id="fact_chess_1" model="chess.odoo.fact">
+            <field name="fact">This chess game uses python-chess for move validation - the same library used by Lichess and chess.com!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_chess_2" model="chess.odoo.fact">
+            <field name="fact">The FEN notation storing your game position was invented in 1883 - older than most ERP systems!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_chess_3" model="chess.odoo.fact">
+            <field name="fact">The Elo rating system used here was created by Arpad Elo in 1960 for the US Chess Federation.</field>
+            <field name="category">fun</field>
+        </record>
+
+    </data>
+</odoo>

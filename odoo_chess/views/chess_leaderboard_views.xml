@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Leaderboard List View (res.users) -->
+    <record id="view_chess_leaderboard_list" model="ir.ui.view">
+        <field name="name">chess.leaderboard.list</field>
+        <field name="model">res.users</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Chess Leaderboard" default_order="chess_rating desc"
+                  create="0" delete="0" edit="0">
+                <field name="name"/>
+                <field name="chess_rating" string="Rating"/>
+                <field name="chess_wins" string="Wins"/>
+                <field name="chess_losses" string="Losses"/>
+                <field name="chess_draws" string="Draws"/>
+                <field name="chess_games_played" string="Games"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Leaderboard Kanban View -->
+    <record id="view_chess_leaderboard_kanban" model="ir.ui.view">
+        <field name="name">chess.leaderboard.kanban</field>
+        <field name="model">res.users</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <kanban create="0" delete="0" edit="0" class="o_chess_leaderboard_kanban">
+                <field name="name"/>
+                <field name="chess_rating"/>
+                <field name="chess_wins"/>
+                <field name="chess_losses"/>
+                <field name="chess_draws"/>
+                <field name="chess_games_played"/>
+                <field name="image_128"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex align-items-center">
+                            <field name="image_128" widget="image" class="o_kanban_image me-3"
+                                   options="{'preview_image': 'image_128'}"/>
+                            <div class="flex-grow-1">
+                                <div class="o_kanban_record_title fw-bold">
+                                    <field name="name"/>
+                                </div>
+                                <div class="o_kanban_record_subtitle">
+                                    <span class="badge bg-primary fs-5">
+                                        <field name="chess_rating"/> ELO
+                                    </span>
+                                </div>
+                                <div class="mt-2 text-muted small">
+                                    <span class="text-success me-2">
+                                        <i class="fa fa-trophy"/> <field name="chess_wins"/> W
+                                    </span>
+                                    <span class="text-danger me-2">
+                                        <i class="fa fa-times"/> <field name="chess_losses"/> L
+                                    </span>
+                                    <span class="text-secondary">
+                                        <i class="fa fa-minus"/> <field name="chess_draws"/> D
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Leaderboard Search View -->
+    <record id="view_chess_leaderboard_search" model="ir.ui.view">
+        <field name="name">chess.leaderboard.search</field>
+        <field name="model">res.users</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <search string="Search Players">
+                <field name="name"/>
+                <filter string="Has Played" name="has_played"
+                        domain="[('chess_games_played', '>', 0)]"/>
+                <filter string="Rating > 1200" name="above_1200"
+                        domain="[('chess_rating', '>', 1200)]"/>
+                <filter string="Rating > 1500" name="above_1500"
+                        domain="[('chess_rating', '>', 1500)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Leaderboard Action -->
+    <record id="action_chess_leaderboard" model="ir.actions.act_window">
+        <field name="name">Leaderboard</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">kanban,list</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_chess_leaderboard_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_chess_leaderboard_list')})]"/>
+        <field name="domain">[('chess_games_played', '>', 0), ('share', '=', False)]</field>
+        <field name="context">{'search_default_has_played': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No players on the leaderboard yet!
+            </p>
+            <p>
+                Play some chess games to appear on the leaderboard.
+            </p>
+        </field>
+    </record>
+
+    <!-- Game Statistics Graph View -->
+    <record id="view_chess_game_graph" model="ir.ui.view">
+        <field name="name">chess.game.graph</field>
+        <field name="model">chess.game</field>
+        <field name="arch" type="xml">
+            <graph string="Game Results" type="pie">
+                <field name="result" type="row"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Game Statistics Pivot View -->
+    <record id="view_chess_game_pivot" model="ir.ui.view">
+        <field name="name">chess.game.pivot</field>
+        <field name="model">chess.game</field>
+        <field name="arch" type="xml">
+            <pivot string="Game Statistics">
+                <field name="white_player_id" type="row"/>
+                <field name="result" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Statistics Action -->
+    <record id="action_chess_statistics" model="ir.actions.act_window">
+        <field name="name">Game Statistics</field>
+        <field name="res_model">chess.game</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="domain">[('state', '=', 'completed')]</field>
+        <field name="context">{'search_default_my_games': 1}</field>
+    </record>
+
+</odoo>
