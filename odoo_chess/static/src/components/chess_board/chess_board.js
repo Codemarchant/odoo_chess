@@ -67,6 +67,9 @@ export class ChessBoard extends Component {
         // Chess.js instance for client-side move validation and sound detection
         this.chess = null;
 
+        // Track pending move to avoid double-animation from bus updates
+        this._pendingMoveUci = null;
+
         onMounted(() => {
             this._initBoard();
             this._loadGameData();
@@ -154,6 +157,9 @@ export class ChessBoard extends Component {
             pieceTheme: "/odoo_chess/static/lib/chessboardjs/img/chesspieces/wikipedia/{piece}.png",
             onDragStart: this._onDragStart.bind(this),
             onDrop: this._onDrop.bind(this),
+            moveSpeed: 150,
+            snapbackSpeed: 50,
+            snapSpeed: 25,
         };
 
         this.board = Chessboard(this.boardRef.el, config);
@@ -259,6 +265,9 @@ export class ChessBoard extends Component {
         // Use chess.js to determine move type and play appropriate sound
         this._playMoveSound(source, target, isPromotion ? "q" : null);
 
+        // Track this move to avoid double-animation from bus
+        this._pendingMoveUci = uciMove;
+
         // Make the move request asynchronously
         this._makeMove(uciMove, oldFen, source, target);
 
@@ -274,9 +283,11 @@ export class ChessBoard extends Component {
             });
 
             if (result.error) {
+                // Clear pending move flag
+                this._pendingMoveUci = null;
                 // Silently reset board position on invalid move (no notification)
                 if (this.board) {
-                    this.board.position(oldFen);
+                    this.board.position(oldFen, false);
                 }
                 // Re-sync chess.js to the valid position
                 if (this.chess) {
@@ -295,10 +306,13 @@ export class ChessBoard extends Component {
                 this.chess.load(result.fen);
             }
 
-            // Update board position to new FEN
+            // Update board position to new FEN (no animation - piece already there)
             if (this.board) {
-                this.board.position(result.fen);
+                this.board.position(result.fen, false);
             }
+
+            // Clear pending move flag
+            this._pendingMoveUci = null;
 
             if (result.game_over) {
                 this.state.gameOver = true;
@@ -309,10 +323,11 @@ export class ChessBoard extends Component {
             this._loadRandomFact();
         } catch (error) {
             console.error("Move error:", error);
+            this._pendingMoveUci = null;
             this.notification.add(_t("Failed to make move"), { type: "danger" });
-            // Ensure board is at old position
+            // Ensure board is at old position (no animation)
             if (this.board) {
-                this.board.position(oldFen);
+                this.board.position(oldFen, false);
             }
         }
     }
@@ -436,6 +451,15 @@ export class ChessBoard extends Component {
         // Filter: only handle messages for this game
         if (payload.game_id !== this.gameId) return;
 
+        // Check if this is our own move that we already handled
+        const isOwnMove = this._pendingMoveUci === payload.uci;
+        if (isOwnMove) {
+            // Clear the flag - we've now received confirmation
+            this._pendingMoveUci = null;
+            // Skip - we already updated the board position
+            return;
+        }
+
         this.state.fen = payload.fen;
         this.state.isCheck = payload.is_check || false;
 
@@ -444,8 +468,9 @@ export class ChessBoard extends Component {
             this.chess.load(payload.fen);
         }
 
+        // Animate opponent/bot moves
         if (this.board) {
-            this.board.position(payload.fen);
+            this.board.position(payload.fen, true);
         }
 
         // Update turn state based on FEN (whose turn it is now)

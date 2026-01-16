@@ -34,7 +34,7 @@
                         <group string="Challenge Details">
                             <field name="inviter_id" readonly="1"/>
                             <field name="invitee_id" readonly="1"/>
-                            <field name="color_choice" readonly="state != 'pending'"/>
+                            <field name="color_choice" readonly="1"/>
                             <field name="expires_at" readonly="1"/>
                         </group>
                         <group string="Game" invisible="not game_id">

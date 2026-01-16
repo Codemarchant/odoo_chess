@@ -2,7 +2,9 @@
 import random
 from datetime import timedelta
 
-from odoo import api, fields, models, _
+from markupsafe import Markup
+
+from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import UserError
 
 
@@ -72,16 +74,33 @@ class ChessInvitation(models.Model):
         """Send notification to invitee about the chess invitation."""
         self.ensure_one()
 
-        # Create activity for the invitee
-        self.env['mail.activity'].sudo().create({
-            'res_model_id': self.env['ir.model']._get_id('chess.invitation'),
-            'res_id': self.id,
-            'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
-            'summary': _('Chess Challenge from %s') % self.inviter_id.name,
-            'note': self.message or _('%s has challenged you to a game of chess!') % self.inviter_id.name,
-            'user_id': self.invitee_id.id,
-            'date_deadline': self.expires_at.date() if self.expires_at else fields.Date.today(),
-        })
+        # Build the notification message body using Odoo's URL helper
+        invitation_url = self._notify_get_action_link('view')
+
+        body_parts = [
+            '<p><strong>%s</strong> has challenged you to a game of chess!</p>' % self.inviter_id.name,
+        ]
+
+        if self.message:
+            body_parts.append('<p><em>"%s"</em></p>' % self.message)
+
+        if self.reward_text:
+            body_parts.append('<p><strong>Stakes:</strong> %s</p>' % self.reward_text)
+
+        body_parts.append(
+            '<p><a href="%s" class="btn btn-primary">View Challenge</a></p>' % invitation_url
+        )
+
+        body = Markup(''.join(body_parts))
+
+        # Post message and notify the invitee
+        self.message_post(
+            body=body,
+            subject=_('Chess Challenge from %s') % self.inviter_id.name,
+            partner_ids=[self.invitee_id.partner_id.id],
+            message_type='notification',
+            subtype_xmlid='mail.mt_comment',
+        )
 
         # Also send via bus for immediate notification
         channel = (self.env.cr.dbname, 'res.partner', self.invitee_id.partner_id.id)
@@ -137,12 +156,8 @@ class ChessInvitation(models.Model):
             'game_id': game.id,
         })
 
-        # Mark activity as done
-        activities = self.env['mail.activity'].search([
-            ('res_model', '=', 'chess.invitation'),
-            ('res_id', '=', self.id),
-        ])
-        activities.action_done()
+        # Create or get chat channel between players and send game start message
+        self._create_game_chat(game)
 
         # Notify inviter
         self._notify_inviter_accepted()
@@ -167,13 +182,6 @@ class ChessInvitation(models.Model):
 
         self.state = 'declined'
 
-        # Mark activity as done
-        activities = self.env['mail.activity'].search([
-            ('res_model', '=', 'chess.invitation'),
-            ('res_id', '=', self.id),
-        ])
-        activities.action_done()
-
         # Notify inviter
         self._notify_inviter_declined()
 
@@ -190,15 +198,37 @@ class ChessInvitation(models.Model):
             raise UserError(_('Only the inviter can cancel this invitation'))
 
         self.state = 'cancelled'
-
-        # Mark activity as done
-        activities = self.env['mail.activity'].search([
-            ('res_model', '=', 'chess.invitation'),
-            ('res_id', '=', self.id),
-        ])
-        activities.unlink()
-
         return True
+
+    def _create_game_chat(self, game):
+        """Create a chat channel between players and send game start message."""
+        self.ensure_one()
+
+        # Get or create chat channel between the two players
+        partner_ids = [self.inviter_id.partner_id.id, self.invitee_id.partner_id.id]
+        channel = self.env['discuss.channel']._get_or_create_chat(partner_ids)
+
+        # Pin the channel for both users so chat popup appears for both
+        channel.sudo().channel_member_ids.filtered(
+            lambda m: m.partner_id.id in partner_ids
+        ).write({'unpin_dt': False})
+
+        # Broadcast to both partners to open the chat
+        channel._broadcast(partner_ids)
+
+        # Build message with link to game
+        game_url = game._notify_get_action_link('view')
+        body = Markup(
+            '<p>♟️ Chess game started! <a href="%s">Open Game</a></p>'
+        ) % game_url
+
+        # Post message as superuser so both players get notified (neither is the author)
+        channel.with_user(SUPERUSER_ID).message_post(
+            body=body,
+            message_type='comment',
+            subtype_xmlid='mail.mt_comment',
+            partner_ids=partner_ids,
+        )
 
     def _notify_inviter_accepted(self):
         """Notify inviter that invitation was accepted."""
