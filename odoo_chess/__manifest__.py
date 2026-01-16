@@ -26,19 +26,21 @@ Requirements:
 -------------
 * python-chess library (pip install python-chess)
     """,
-    'author': 'Odoo Chess Team',
-    'website': '',
-    'license': 'LGPL-3',
+    'author': 'Codemarchant',
+    'website': 'https://codemarchant.com',
+    'support': 'support@codemarchant.com',
     'depends': [
         'base',
         'web',
         'mail',
         'bus',
     ],
+    'external_dependencies': {
+        'python': ['chess'],
+    },
     'data': [
         'security/chess_security.xml',
         'security/ir.model.access.csv',
-        'data/chess_bot_data.xml',
         'data/chess_odoo_facts_data.xml',
         'wizard/chess_create_game_views.xml',
         'views/chess_game_views.xml',

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
+
 import chess
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
+
+from .chess_bot import get_bot_selection, get_bot_move
 
 _logger = logging.getLogger(__name__)
 
@@ -65,7 +68,7 @@ class ChessGame(models.Model):
 
     # Bot Game
     is_bot_game = fields.Boolean(string='Bot Game', default=False)
-    bot_id = fields.Many2one('chess.bot', string='Bot Opponent')
+    bot_key = fields.Selection(selection=get_bot_selection, string='Bot Opponent')
     bot_color = fields.Selection([
         ('white', 'White'),
         ('black', 'Black'),
@@ -228,14 +231,19 @@ class ChessGame(models.Model):
             })
 
             # Record move in history
-            self.env['chess.move'].create({
+            move_vals = {
                 'game_id': self.id,
                 'sequence': self.move_count,
-                'player_id': self.env.user.id,
                 'uci': uci_move,
                 'san': san,
                 'fen_after': board.fen(),
-            })
+            }
+            if is_bot_move:
+                move_vals['is_bot_move'] = True
+                move_vals['bot_key'] = self.bot_key
+            else:
+                move_vals['player_id'] = self.env.user.id
+            self.env['chess.move'].create(move_vals)
 
             # Check for game over conditions
             game_over_result = self._check_game_over(board)
@@ -432,7 +440,7 @@ class ChessGame(models.Model):
 
     def _is_bot_turn(self):
         """Check if it's the bot's turn based on FEN position."""
-        if not self.is_bot_game or not self.bot_id or not self.bot_color:
+        if not self.is_bot_game or not self.bot_color:
             return False
         # Check the FEN turn indicator ('w' or 'b') directly
         if self.fen:
@@ -448,10 +456,10 @@ class ChessGame(models.Model):
     def _schedule_bot_move(self):
         """Make the bot move (called after player moves in bot game)."""
         self.ensure_one()
-        if not self.is_bot_game or not self.bot_id:
+        if not self.is_bot_game or not self.bot_key:
             return
 
-        bot_uci = self.bot_id.get_move(self.fen)
+        bot_uci = get_bot_move(self.bot_key, self.fen)
         if bot_uci:
             # Use sudo to make the bot move
             self.sudo().action_make_move(bot_uci)

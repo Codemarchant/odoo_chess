@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+import chess
+
 from odoo.tests.common import TransactionCase
+
+from odoo.addons.odoo_chess.models.chess_bot import get_bot_move, CHESS_BOTS
 
 
 class TestChessMoves(TransactionCase):
@@ -241,51 +245,54 @@ class TestChessBot(TransactionCase):
             'email': 'test_bot@test.com',
         })
 
-    def test_random_bot_returns_legal_move(self):
-        """Test that random bot returns a legal move."""
-        bot = self.env['chess.bot'].create({
-            'name': 'Test Random Bot',
-            'difficulty': 'random',
-        })
-
-        import chess
+    def test_beginner_bot_returns_legal_move(self):
+        """Test that beginner bot returns a legal move."""
         fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         board = chess.Board(fen)
 
-        move_uci = bot.get_move(fen)
+        move_uci = get_bot_move('beginner_bob', fen)
 
         self.assertIsNotNone(move_uci)
         move = chess.Move.from_uci(move_uci)
         self.assertIn(move, board.legal_moves)
 
-    def test_easy_bot_returns_legal_move(self):
-        """Test that easy bot returns a legal move."""
-        bot = self.env['chess.bot'].create({
-            'name': 'Test Easy Bot',
-            'difficulty': 'easy',
-        })
-
-        import chess
+    def test_casual_bot_returns_legal_move(self):
+        """Test that casual bot returns a legal move."""
         fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         board = chess.Board(fen)
 
-        move_uci = bot.get_move(fen)
+        move_uci = get_bot_move('casual_carl', fen)
 
         self.assertIsNotNone(move_uci)
         move = chess.Move.from_uci(move_uci)
         self.assertIn(move, board.legal_moves)
 
-    def test_bot_captures_when_possible(self):
-        """Test that medium+ bot captures free pieces."""
-        bot = self.env['chess.bot'].create({
-            'name': 'Test Medium Bot',
-            'difficulty': 'medium',
-        })
+    def test_randy_ram_returns_legal_move(self):
+        """Test that Randy Ram (hardest bot) returns a legal move."""
+        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        board = chess.Board(fen)
 
+        move_uci = get_bot_move('randy_ram', fen)
+
+        self.assertIsNotNone(move_uci)
+        move = chess.Move.from_uci(move_uci)
+        self.assertIn(move, board.legal_moves)
+
+    def test_bot_finds_capture(self):
+        """Test that bot finds obvious captures."""
         # Position with free queen capture
         fen = 'k7/8/8/8/4q3/8/8/4K2R w - - 0 1'  # Rook can take queen
 
-        move_uci = bot.get_move(fen)
+        move_uci = get_bot_move('serious_sam', fen)
 
-        # Medium bot should find the queen capture
+        # Bot should find the queen capture
         self.assertEqual(move_uci, 'h1e1')  # Rook takes queen
+
+    def test_all_bots_defined(self):
+        """Test that all expected bots are defined."""
+        expected_bots = ['beginner_bob', 'casual_carl', 'serious_sam', 'randy_ram']
+        for bot_key in expected_bots:
+            self.assertIn(bot_key, CHESS_BOTS)
+            self.assertIn('name', CHESS_BOTS[bot_key])
+            self.assertIn('depth', CHESS_BOTS[bot_key])
+            self.assertIn('rating', CHESS_BOTS[bot_key])

@@ -3,13 +3,6 @@
 
     <!-- Actions must be defined before menus that reference them -->
 
-    <!-- Bot Configuration Action -->
-    <record id="action_chess_bots" model="ir.actions.act_window">
-        <field name="name">Chess Bots</field>
-        <field name="res_model">chess.bot</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
     <!-- Odoo Facts Action -->
     <record id="action_chess_facts" model="ir.actions.act_window">
         <field name="name">Odoo Facts</field>
@@ -73,64 +66,17 @@
               groups="odoo_chess.group_chess_manager"
               sequence="90"/>
 
-    <menuitem id="menu_chess_bots"
-              name="Bots"
-              parent="menu_chess_config"
-              action="action_chess_bots"
-              sequence="10"/>
-
     <menuitem id="menu_chess_facts"
               name="Odoo Facts"
               parent="menu_chess_config"
               action="action_chess_facts"
-              sequence="20"/>
+              sequence="10"/>
 
     <menuitem id="menu_chess_all_games"
               name="All Games"
               parent="menu_chess_config"
               action="action_chess_games_all"
-              sequence="30"/>
-
-    <!-- Bot Views -->
-    <record id="view_chess_bot_list" model="ir.ui.view">
-        <field name="name">chess.bot.list</field>
-        <field name="model">chess.bot</field>
-        <field name="arch" type="xml">
-            <list string="Chess Bots">
-                <field name="name"/>
-                <field name="difficulty"/>
-                <field name="rating"/>
-                <field name="active"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="view_chess_bot_form" model="ir.ui.view">
-        <field name="name">chess.bot.form</field>
-        <field name="model">chess.bot</field>
-        <field name="arch" type="xml">
-            <form string="Chess Bot">
-                <sheet>
-                    <field name="avatar" widget="image" class="oe_avatar"/>
-                    <div class="oe_title">
-                        <h1><field name="name" placeholder="Bot Name"/></h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="difficulty"/>
-                            <field name="rating"/>
-                        </group>
-                        <group>
-                            <field name="active"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="description" placeholder="Description of this bot..."/>
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
+              sequence="20"/>
 
     <!-- Odoo Facts Views -->
     <record id="view_chess_fact_list" model="ir.ui.view">

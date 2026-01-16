@@ -6,7 +6,7 @@
         <field name="name">chess.invitation.form</field>
         <field name="model">chess.invitation</field>
         <field name="arch" type="xml">
-            <form string="Chess Invitation">
+            <form string="Chess Invitation" create="false">
                 <header>
                     <button name="action_accept" string="Accept Challenge"
                             type="object" class="btn-success"
@@ -58,7 +58,7 @@
         <field name="name">chess.invitation.list</field>
         <field name="model">chess.invitation</field>
         <field name="arch" type="xml">
-            <list string="Chess Invitations">
+            <list string="Chess Invitations" create="false">
                 <field name="inviter_id"/>
                 <field name="invitee_id"/>
                 <field name="color_choice"/>

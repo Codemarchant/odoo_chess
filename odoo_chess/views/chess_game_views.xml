@@ -15,7 +15,7 @@
         <field name="name">chess.game.form</field>
         <field name="model">chess.game</field>
         <field name="arch" type="xml">
-            <form string="Chess Game">
+            <form string="Chess Game" create="false">
                 <header>
                     <button name="action_resign" string="Resign"
                             type="object" class="btn-danger"
@@ -62,7 +62,7 @@
                             <field name="result_reason" readonly="1" invisible="state != 'completed'"/>
                             <field name="winner_id" readonly="1" invisible="state != 'completed' or result == 'draw'"/>
                             <field name="is_bot_game" readonly="1"/>
-                            <field name="bot_id" invisible="not is_bot_game" readonly="1"/>
+                            <field name="bot_key" invisible="not is_bot_game" readonly="1"/>
                         </group>
                     </group>
 
@@ -82,7 +82,7 @@
                                 <list>
                                     <field name="sequence"/>
                                     <field name="san"/>
-                                    <field name="player_id"/>
+                                    <field name="player_display"/>
                                     <field name="timestamp"/>
                                 </list>
                             </field>

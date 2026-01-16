@@ -4,6 +4,8 @@ import random
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+from odoo.addons.odoo_chess.models.chess_bot import get_bot_selection
+
 
 class ChessCreateGame(models.TransientModel):
     _name = 'chess.create.game'
@@ -22,7 +24,7 @@ class ChessCreateGame(models.TransientModel):
     )
 
     # Bot opponent
-    bot_id = fields.Many2one('chess.bot', string='Bot Opponent')
+    bot_key = fields.Selection(selection=get_bot_selection, string='Bot Opponent')
 
     # Color selection
     play_as = fields.Selection([
@@ -48,7 +50,7 @@ class ChessCreateGame(models.TransientModel):
         if self.game_type == 'bot':
             self.opponent_id = False
         else:
-            self.bot_id = False
+            self.bot_key = False
 
     def action_create_game(self):
         """Create game based on type selection."""
@@ -90,7 +92,7 @@ class ChessCreateGame(models.TransientModel):
 
     def _create_bot_game(self):
         """Create a game against a bot."""
-        if not self.bot_id:
+        if not self.bot_key:
             raise UserError(_('Please select a bot opponent'))
 
         # Determine colors
@@ -104,7 +106,7 @@ class ChessCreateGame(models.TransientModel):
             'state': 'active',
             'reward_text': self.reward_text,
             'is_bot_game': True,
-            'bot_id': self.bot_id.id,
+            'bot_key': self.bot_key,
         }
 
         if user_plays_white:

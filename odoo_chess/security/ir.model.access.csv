@@ -5,8 +5,6 @@ access_chess_move_user,chess.move.user,model_chess_move,group_chess_user,1,0,1,0
 access_chess_move_manager,chess.move.manager,model_chess_move,group_chess_manager,1,1,1,1
 access_chess_invitation_user,chess.invitation.user,model_chess_invitation,group_chess_user,1,1,1,0
 access_chess_invitation_manager,chess.invitation.manager,model_chess_invitation,group_chess_manager,1,1,1,1
-access_chess_bot_user,chess.bot.user,model_chess_bot,group_chess_user,1,0,0,0
-access_chess_bot_manager,chess.bot.manager,model_chess_bot,group_chess_manager,1,1,1,1
 access_chess_odoo_fact_user,chess.odoo.fact.user,model_chess_odoo_fact,group_chess_user,1,0,0,0
 access_chess_odoo_fact_manager,chess.odoo.fact.manager,model_chess_odoo_fact,group_chess_manager,1,1,1,1
 access_chess_create_game_user,chess.create.game.user,model_chess_create_game,group_chess_user,1,1,1,1
