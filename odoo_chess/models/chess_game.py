@@ -6,7 +6,7 @@ import chess
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
-from .chess_bot import get_bot_selection, get_bot_move
+from .chess_bot import get_bot_selection, get_bot_move, get_bot_info
 
 _logger = logging.getLogger(__name__)
 
@@ -83,6 +83,52 @@ class ChessGame(models.Model):
 
     # Draw Handling
     draw_offered_by = fields.Many2one('res.users', string='Draw Offered By')
+
+    # Time Control Configuration
+    is_timed = fields.Boolean(string='Timed Game', default=False)
+    base_time = fields.Integer(
+        string='Base Time (seconds)',
+        default=0,
+        help='Initial time for each player in seconds'
+    )
+    increment = fields.Integer(
+        string='Increment (seconds)',
+        default=0,
+        help='Time added after each move in seconds'
+    )
+
+    # Time Tracking (stored in milliseconds for precision)
+    white_time_remaining = fields.Integer(
+        string='White Time Remaining (ms)',
+        default=0,
+        help='White player remaining time in milliseconds'
+    )
+    black_time_remaining = fields.Integer(
+        string='Black Time Remaining (ms)',
+        default=0,
+        help='Black player remaining time in milliseconds'
+    )
+    clock_started_at = fields.Datetime(
+        string='Clock Started At',
+        help='When the current player clock started running'
+    )
+
+    # Time Display Fields (computed)
+    time_control_display = fields.Char(
+        string='Time Control',
+        compute='_compute_time_control_display'
+    )
+    white_time_display = fields.Char(
+        string='White Time',
+        compute='_compute_time_display'
+    )
+    black_time_display = fields.Char(
+        string='Black Time',
+        compute='_compute_time_display'
+    )
+
+    # Network grace period in milliseconds
+    NETWORK_GRACE_MS = 500
 
     # Computed Fields
     is_my_turn = fields.Boolean(compute='_compute_is_my_turn')
@@ -172,6 +218,161 @@ class ChessGame(models.Model):
                 game.is_stalemate = False
                 game.can_claim_draw = False
 
+    @api.depends('is_timed', 'base_time', 'increment')
+    def _compute_time_control_display(self):
+        for game in self:
+            if not game.is_timed:
+                game.time_control_display = 'Untimed'
+            else:
+                minutes = game.base_time // 60
+                if game.increment:
+                    game.time_control_display = f'{minutes}+{game.increment}'
+                else:
+                    game.time_control_display = f'{minutes} min'
+
+    @api.depends('white_time_remaining', 'black_time_remaining')
+    def _compute_time_display(self):
+        for game in self:
+            game.white_time_display = game._format_time_ms(game.white_time_remaining)
+            game.black_time_display = game._format_time_ms(game.black_time_remaining)
+
+    def _format_time_ms(self, milliseconds):
+        """Format milliseconds as MM:SS or H:MM:SS."""
+        if milliseconds <= 0:
+            return '0:00'
+
+        total_seconds = milliseconds // 1000
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+
+        if hours > 0:
+            return f'{hours}:{minutes:02d}:{seconds:02d}'
+        else:
+            return f'{minutes}:{seconds:02d}'
+
+    def _get_current_turn_color(self):
+        """Get the current turn color from FEN."""
+        self.ensure_one()
+        if self.fen:
+            parts = self.fen.split(' ')
+            if len(parts) >= 2:
+                return 'white' if parts[1] == 'w' else 'black'
+        return 'white'
+
+    def _start_clock(self):
+        """Start the clock for the current player."""
+        self.ensure_one()
+        if not self.is_timed or self.state != 'active':
+            return
+
+        self.clock_started_at = fields.Datetime.now()
+
+    def _stop_clock_and_calculate_time(self, player_color):
+        """
+        Stop the specified player's clock and deduct elapsed time.
+        Returns elapsed time in milliseconds.
+        """
+        self.ensure_one()
+        if not self.is_timed or not self.clock_started_at:
+            return 0
+
+        # Calculate elapsed time
+        now = fields.Datetime.now()
+        elapsed = now - self.clock_started_at
+        elapsed_ms = int(elapsed.total_seconds() * 1000)
+
+        # Apply grace period (only for network latency, not display)
+        elapsed_ms_with_grace = max(0, elapsed_ms - self.NETWORK_GRACE_MS)
+
+        # Deduct time from the player who just moved
+        if player_color == 'white':
+            new_time = self.white_time_remaining - elapsed_ms_with_grace
+            self.white_time_remaining = max(0, new_time)
+        else:
+            new_time = self.black_time_remaining - elapsed_ms_with_grace
+            self.black_time_remaining = max(0, new_time)
+
+        # Clear clock started timestamp
+        self.clock_started_at = False
+
+        return elapsed_ms_with_grace
+
+    def _apply_increment(self, player_color):
+        """Apply time increment to the player who just moved."""
+        self.ensure_one()
+        if not self.is_timed or self.increment <= 0:
+            return
+
+        increment_ms = self.increment * 1000
+
+        if player_color == 'white':
+            self.white_time_remaining += increment_ms
+        else:
+            self.black_time_remaining += increment_ms
+
+    def _check_timeout(self):
+        """
+        Check if the current player has timed out.
+        Returns dict with result info if timeout, None otherwise.
+        """
+        self.ensure_one()
+        if not self.is_timed or self.state != 'active':
+            return None
+
+        # If clock hasn't started yet (first move), no timeout possible
+        if not self.clock_started_at:
+            return None
+
+        # Calculate current time accounting for running clock
+        now = fields.Datetime.now()
+        elapsed = now - self.clock_started_at
+        elapsed_ms = int(elapsed.total_seconds() * 1000)
+
+        current_turn = self._get_current_turn_color()
+
+        if current_turn == 'white':
+            current_time = self.white_time_remaining - elapsed_ms
+            if current_time <= 0:
+                return {'result': 'black_wins', 'reason': 'timeout'}
+        else:
+            current_time = self.black_time_remaining - elapsed_ms
+            if current_time <= 0:
+                return {'result': 'white_wins', 'reason': 'timeout'}
+
+        return None
+
+    def _get_current_times_with_running_clock(self):
+        """
+        Get current times accounting for the running clock.
+        Used for sending accurate time data to clients.
+        """
+        self.ensure_one()
+        white_time = self.white_time_remaining
+        black_time = self.black_time_remaining
+        active_clock = 'none'
+
+        if self.is_timed and self.clock_started_at and self.state == 'active':
+            now = fields.Datetime.now()
+            elapsed = now - self.clock_started_at
+            elapsed_ms = int(elapsed.total_seconds() * 1000)
+
+            current_turn = self._get_current_turn_color()
+            active_clock = current_turn
+
+            # Deduct from active player's clock for display
+            if current_turn == 'white':
+                white_time = max(0, white_time - elapsed_ms)
+            else:
+                black_time = max(0, black_time - elapsed_ms)
+
+        return {
+            'white_time': white_time,
+            'black_time': black_time,
+            'active_clock': active_clock,
+            'server_time': fields.Datetime.now().isoformat(),
+        }
+
     def _get_board_from_moves(self):
         """Reconstruct board from move history for accurate draw detection."""
         self.ensure_one()
@@ -185,7 +386,7 @@ class ChessGame(models.Model):
 
     def action_make_move(self, uci_move):
         """
-        Server-side move validation and execution.
+        Server-side move validation and execution with time control support.
         Returns dict with success/error status and updated game state.
         """
         self.ensure_one()
@@ -193,6 +394,17 @@ class ChessGame(models.Model):
         # Check game state
         if self.state != 'active':
             return {'error': _('Game is not active')}
+
+        # Check for timeout before processing move (for timed games)
+        if self.is_timed:
+            timeout_result = self._check_timeout()
+            if timeout_result:
+                self._end_game(timeout_result['result'], timeout_result['reason'])
+                return {
+                    'error': _('Time has run out'),
+                    'game_over': True,
+                    'result': timeout_result['result'],
+                }
 
         # Check if it's this player's turn
         if self.env.user != self.current_player_id:
@@ -208,11 +420,20 @@ class ChessGame(models.Model):
             if move not in board.legal_moves:
                 return {'error': _('Illegal move')}
 
+            # Determine current player color (before move is made)
+            player_color = 'white' if board.turn == chess.WHITE else 'black'
+
             # Determine if this is a bot move (for bot games)
             is_bot_move = False
             if self.is_bot_game and self.bot_color:
-                current_turn = 'white' if board.turn == chess.WHITE else 'black'
-                is_bot_move = (current_turn == self.bot_color)
+                is_bot_move = (player_color == self.bot_color)
+
+            # Time control: Stop clock and deduct time for the player who just moved
+            time_spent_ms = 0
+            if self.is_timed and self.clock_started_at:
+                time_spent_ms = self._stop_clock_and_calculate_time(player_color)
+                # Apply increment after successful move
+                self._apply_increment(player_color)
 
             # Get SAN notation before pushing
             san = board.san(move)
@@ -230,13 +451,16 @@ class ChessGame(models.Model):
                 'draw_offered_by': False,  # Clear any pending draw offer
             })
 
-            # Record move in history
+            # Record move in history with time data
             move_vals = {
                 'game_id': self.id,
                 'sequence': self.move_count,
                 'uci': uci_move,
                 'san': san,
                 'fen_after': board.fen(),
+                'time_spent_ms': time_spent_ms,
+                'white_time_after': self.white_time_remaining,
+                'black_time_after': self.black_time_remaining,
             }
             if is_bot_move:
                 move_vals['is_bot_move'] = True
@@ -249,16 +473,23 @@ class ChessGame(models.Model):
             game_over_result = self._check_game_over(board)
             if game_over_result:
                 self._end_game(game_over_result['result'], game_over_result['reason'])
+            else:
+                # Start clock for next player (if timed game and game not over)
+                if self.is_timed:
+                    self._start_clock()
 
-            # Broadcast move via bus
-            self._broadcast_move(uci_move, san, board.fen(), is_bot_move)
+            # Get time info for broadcast
+            time_info = self._get_current_times_with_running_clock() if self.is_timed else None
+
+            # Broadcast move via bus (with time info)
+            self._broadcast_move(uci_move, san, board.fen(), is_bot_move, time_info)
 
             # If bot game and now bot's turn, schedule bot move
             if self.is_bot_game and self._is_bot_turn() and self.state == 'active':
                 self._schedule_bot_move()
 
-            # Return current state (self.fen may have been updated by bot move)
-            return {
+            # Build response
+            response = {
                 'success': True,
                 'fen': self.fen,  # Use self.fen to include any bot moves
                 'san': san,
@@ -269,6 +500,17 @@ class ChessGame(models.Model):
                 'is_bot_game': self.is_bot_game,
                 'is_my_turn': self.is_my_turn,
             }
+
+            # Include time info in response for timed games
+            if self.is_timed:
+                current_times = self._get_current_times_with_running_clock()
+                response.update({
+                    'white_time': current_times['white_time'],
+                    'black_time': current_times['black_time'],
+                    'active_clock': current_times['active_clock'],
+                })
+
+            return response
 
         except ValueError as e:
             return {'error': _('Invalid move format: %s') % str(e)}
@@ -468,7 +710,7 @@ class ChessGame(models.Model):
         """Get the bus channel name for this game."""
         return f'chess_game_{self.id}'
 
-    def _broadcast_move(self, uci, san, fen, is_bot_move=False):
+    def _broadcast_move(self, uci, san, fen, is_bot_move=False, time_info=None):
         """Broadcast move to all participants via bus.
 
         Args:
@@ -476,6 +718,7 @@ class ChessGame(models.Model):
             san: SAN notation of the move
             fen: FEN position after the move
             is_bot_move: True if this move was made by the bot
+            time_info: Optional dict with time control data
         """
         channel = f'chess_game_{self.id}'
         message = {
@@ -488,6 +731,16 @@ class ChessGame(models.Model):
             'is_bot_move': is_bot_move,
             'is_check': self.is_check,
         }
+
+        # Add time control info if timed game
+        if self.is_timed and time_info:
+            message.update({
+                'white_time': time_info['white_time'],
+                'black_time': time_info['black_time'],
+                'active_clock': time_info['active_clock'],
+                'server_time': time_info['server_time'],
+            })
+
         self.env['bus.bus']._sendone(channel, 'chess_move', message)
 
     def _broadcast_game_end(self):
@@ -532,7 +785,7 @@ class ChessGame(models.Model):
             'player_id': m.player_id.id,
         } for m in self.move_ids.sorted('sequence')]
 
-        return {
+        state = {
             'id': self.id,
             'state': self.state,
             'fen': self.fen,
@@ -557,7 +810,31 @@ class ChessGame(models.Model):
             'draw_offered_by': self.draw_offered_by.id if self.draw_offered_by else None,
             'is_check': self.is_check,
             'is_bot_game': self.is_bot_game,
+            # Time control fields
+            'is_timed': self.is_timed,
+            'time_control_display': self.time_control_display,
         }
+
+        # Add bot info for bot games
+        if self.is_bot_game and self.bot_key:
+            bot_info = get_bot_info(self.bot_key)
+            if bot_info:
+                state['bot_name'] = bot_info.get('name', 'Bot')
+                state['bot_color'] = self.bot_color
+
+        # Add detailed time info for timed games
+        if self.is_timed:
+            time_info = self._get_current_times_with_running_clock()
+            state.update({
+                'base_time': self.base_time,
+                'increment': self.increment,
+                'white_time': time_info['white_time'],
+                'black_time': time_info['black_time'],
+                'active_clock': time_info['active_clock'],
+                'server_time': time_info['server_time'],
+            })
+
+        return state
 
     @api.model
     def get_my_active_games(self):
@@ -568,3 +845,41 @@ class ChessGame(models.Model):
             ('white_player_id', '=', self.env.user.id),
             ('black_player_id', '=', self.env.user.id),
         ])
+
+    def action_claim_timeout(self):
+        """
+        Claim a timeout win. Called by client when opponent's time runs out.
+        Server validates the timeout before ending the game.
+        Returns dict with success status and game result.
+        """
+        self.ensure_one()
+
+        if self.state != 'active':
+            return {'error': _('Game is not active')}
+
+        if not self.is_timed:
+            return {'error': _('This is not a timed game')}
+
+        # Verify the caller is a player in this game
+        if self.env.user not in (self.white_player_id, self.black_player_id):
+            # For bot games, the user plays both sides
+            if not self.is_bot_game:
+                return {'error': _('You are not a player in this game')}
+
+        # Check for actual timeout (server is authoritative)
+        timeout_result = self._check_timeout()
+        if not timeout_result:
+            return {'error': _('No timeout has occurred')}
+
+        # End the game
+        _logger.info(
+            "Game %s timeout claimed: %s by %s",
+            self.id, timeout_result['result'], timeout_result['reason']
+        )
+        self._end_game(timeout_result['result'], timeout_result['reason'])
+
+        return {
+            'success': True,
+            'result': timeout_result['result'],
+            'reason': timeout_result['reason'],
+        }

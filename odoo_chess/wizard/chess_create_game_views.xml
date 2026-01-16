@@ -27,6 +27,19 @@
                     </group>
                 </group>
                 <group>
+                    <group string="Time Control">
+                        <field name="time_control_type" widget="radio"/>
+                        <field name="time_control_preset"
+                               invisible="time_control_type not in ('bullet', 'blitz', 'rapid', 'classical')"
+                               required="time_control_type in ('bullet', 'blitz', 'rapid', 'classical')"/>
+                        <field name="base_time_minutes"
+                               invisible="time_control_type != 'custom'"
+                               required="time_control_type == 'custom'"/>
+                        <field name="increment_seconds"
+                               invisible="time_control_type != 'custom'"/>
+                    </group>
+                </group>
+                <group>
                     <field name="reward_text" placeholder="e.g., Loser buys coffee..."/>
                     <field name="message" invisible="game_type != 'human'"
                            placeholder="Add a message to your challenge..."/>

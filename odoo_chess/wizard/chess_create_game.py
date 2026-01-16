@@ -33,6 +33,48 @@ class ChessCreateGame(models.TransientModel):
         ('black', 'Black'),
     ], default='random', string='Play As')
 
+    # Time Control
+    time_control_type = fields.Selection([
+        ('untimed', 'Untimed'),
+        ('bullet', 'Bullet'),
+        ('blitz', 'Blitz'),
+        ('rapid', 'Rapid'),
+        ('classical', 'Classical'),
+        ('custom', 'Custom'),
+    ], default='untimed', string='Time Control', required=True)
+
+    time_control_preset = fields.Selection([
+        # Bullet presets
+        ('1+0', '1 min'),
+        ('1+1', '1 | 1'),
+        ('2+1', '2 | 1'),
+        # Blitz presets
+        ('3+0', '3 min'),
+        ('3+2', '3 | 2'),
+        ('5+0', '5 min'),
+        ('5+3', '5 | 3'),
+        # Rapid presets
+        ('10+0', '10 min'),
+        ('10+5', '10 | 5'),
+        ('15+10', '15 | 10'),
+        # Classical presets
+        ('30+0', '30 min'),
+        ('30+20', '30 | 20'),
+        ('60+30', '60 | 30'),
+    ], string='Time Preset')
+
+    base_time_minutes = fields.Integer(
+        string='Base Time (minutes)',
+        default=5,
+        help='Initial time on each player clock'
+    )
+
+    increment_seconds = fields.Integer(
+        string='Increment (seconds)',
+        default=0,
+        help='Seconds added after each move'
+    )
+
     # Stakes
     reward_text = fields.Text(
         string='Stakes/Reward',
@@ -51,6 +93,52 @@ class ChessCreateGame(models.TransientModel):
             self.opponent_id = False
         else:
             self.bot_key = False
+
+    @api.onchange('time_control_type')
+    def _onchange_time_control_type(self):
+        """Set default preset based on time control type."""
+        presets = {
+            'bullet': '1+0',
+            'blitz': '5+0',
+            'rapid': '10+0',
+            'classical': '30+0',
+        }
+        if self.time_control_type in presets:
+            self.time_control_preset = presets[self.time_control_type]
+        elif self.time_control_type == 'untimed':
+            self.time_control_preset = False
+            self.base_time_minutes = 0
+            self.increment_seconds = 0
+        elif self.time_control_type == 'custom':
+            self.time_control_preset = False
+            # Keep existing values for custom or set defaults
+            if not self.base_time_minutes:
+                self.base_time_minutes = 5
+
+    def _get_time_control_values(self):
+        """Parse time control into base_time and increment values (in seconds)."""
+        if self.time_control_type == 'untimed':
+            return {'base_time': 0, 'increment': 0, 'is_timed': False}
+
+        if self.time_control_type == 'custom':
+            return {
+                'base_time': self.base_time_minutes * 60,
+                'increment': self.increment_seconds,
+                'is_timed': True
+            }
+
+        # Parse preset (format: "X+Y" where X is minutes, Y is seconds increment)
+        if self.time_control_preset:
+            parts = self.time_control_preset.split('+')
+            base_minutes = int(parts[0])
+            increment = int(parts[1]) if len(parts) > 1 else 0
+            return {
+                'base_time': base_minutes * 60,
+                'increment': increment,
+                'is_timed': True
+            }
+
+        return {'base_time': 0, 'increment': 0, 'is_timed': False}
 
     def action_create_game(self):
         """Create game based on type selection."""
@@ -72,13 +160,20 @@ class ChessCreateGame(models.TransientModel):
         # Map play_as to color_choice
         color_choice = self.play_as
 
-        # Create invitation
+        # Get time control values
+        time_vals = self._get_time_control_values()
+
+        # Create invitation with time control
         invitation = self.env['chess.invitation'].create({
             'inviter_id': self.env.user.id,
             'invitee_id': self.opponent_id.id,
             'color_choice': color_choice,
             'reward_text': self.reward_text,
             'message': self.message,
+            # Time control fields
+            'is_timed': time_vals['is_timed'],
+            'base_time': time_vals['base_time'],
+            'increment': time_vals['increment'],
         })
 
         return {
@@ -101,13 +196,26 @@ class ChessCreateGame(models.TransientModel):
         else:
             user_plays_white = self.play_as == 'white'
 
+        # Get time control values
+        time_vals = self._get_time_control_values()
+
         # Create game directly (no invitation needed for bot)
         game_vals = {
             'state': 'active',
             'reward_text': self.reward_text,
             'is_bot_game': True,
             'bot_key': self.bot_key,
+            # Time control fields
+            'is_timed': time_vals['is_timed'],
+            'base_time': time_vals['base_time'],
+            'increment': time_vals['increment'],
         }
+
+        # Set initial time remaining (convert seconds to milliseconds)
+        if time_vals['is_timed']:
+            initial_time_ms = time_vals['base_time'] * 1000
+            game_vals['white_time_remaining'] = initial_time_ms
+            game_vals['black_time_remaining'] = initial_time_ms
 
         if user_plays_white:
             game_vals.update({

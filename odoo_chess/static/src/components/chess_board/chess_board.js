@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, onMounted, onWillUnmount, useEffect } from "@odoo/owl";
+import { Component, useState, useRef, onMounted, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -57,7 +57,21 @@ export class ChessBoard extends Component {
             isCheck: false,
             drawOffered: false,
             currentFact: "",
+            // Time control state
+            isTimed: false,
+            whiteTime: 0,  // milliseconds
+            blackTime: 0,  // milliseconds
+            activeClock: "none",  // 'white', 'black', or 'none'
+            lastSyncTime: null,  // when times were last synced from server
+            whiteTimeDisplay: "0:00",
+            blackTimeDisplay: "0:00",
         });
+
+        // Timer interval reference for clock countdown
+        this.clockTimer = null;
+
+        // Flag to prevent multiple timeout claims
+        this._claimingTimeout = false;
 
         // Get game data from record
         this.gameId = this.props.record.resId;
@@ -86,6 +100,8 @@ export class ChessBoard extends Component {
             if (this._resizeHandler) {
                 window.removeEventListener("resize", this._resizeHandler);
             }
+            // Clean up clock timer
+            this._stopClockTimer();
         });
     }
 
@@ -168,6 +184,9 @@ export class ChessBoard extends Component {
         if (this.gameData && this.gameData.my_color === "black") {
             this.board.orientation("black");
         }
+
+        // Sync side panel height after board renders
+        setTimeout(() => this._syncSidePanelHeight(), 100);
     }
 
     async _loadGameData() {
@@ -187,6 +206,17 @@ export class ChessBoard extends Component {
             this.state.drawOffered = !!result.draw_offered_by;
             this.state.gameOver = result.state === "completed";
 
+            // Initialize time control state
+            this.state.isTimed = result.is_timed || false;
+            if (this.state.isTimed) {
+                this._syncTimeFromServer({
+                    white_time: result.white_time,
+                    black_time: result.black_time,
+                    active_clock: result.active_clock,
+                });
+                this._initClockTimer();
+            }
+
             // Initialize chess.js with current position
             if (typeof Chess !== "undefined") {
                 this.chess = new Chess(result.fen);
@@ -198,6 +228,8 @@ export class ChessBoard extends Component {
                 if (result.my_color === "black") {
                     this.board.orientation("black");
                 }
+                // Sync side panel height after board update
+                setTimeout(() => this._syncSidePanelHeight(), 100);
             }
         } catch (error) {
             console.error("Failed to load game data:", error);
@@ -219,6 +251,19 @@ export class ChessBoard extends Component {
                 this.boardRef.el.style.width = boardSize + "px";
             }
             this.board.resize();
+            this._syncSidePanelHeight();
+        }
+    }
+
+    _syncSidePanelHeight() {
+        // Sync side panel height with board height (desktop layout)
+        if (!this.boardRef.el) return;
+
+        const boardEl = this.boardRef.el;
+        const sidePanel = boardEl.closest('.o_chess_game_area')?.querySelector('.o_chess_side_panel');
+
+        if (sidePanel && boardEl.offsetHeight > 0) {
+            sidePanel.style.height = boardEl.offsetHeight + "px";
         }
     }
 
@@ -410,7 +455,6 @@ export class ChessBoard extends Component {
         } else {
             soundType = "move";
         }
-        console.log("_playMoveSound (my move):", source, "->", target, "flags:", move.flags, "captured:", move.captured, "->", soundType);
         this._playSound(soundType);
 
         // Note: We don't undo the move - the chess instance stays in sync
@@ -432,7 +476,6 @@ export class ChessBoard extends Component {
         } else {
             soundType = "move";
         }
-        console.log("_playSoundForMove:", san, "->", soundType);
         this._playSound(soundType);
     }
 
@@ -463,6 +506,15 @@ export class ChessBoard extends Component {
         this.state.fen = payload.fen;
         this.state.isCheck = payload.is_check || false;
 
+        // Sync time from move payload (for timed games)
+        if (this.state.isTimed && payload.white_time !== undefined) {
+            this._syncTimeFromServer({
+                white_time: payload.white_time,
+                black_time: payload.black_time,
+                active_clock: payload.active_clock,
+            });
+        }
+
         // Sync chess.js to the new position
         if (this.chess) {
             this.chess.load(payload.fen);
@@ -485,9 +537,7 @@ export class ChessBoard extends Component {
             ? payload.is_bot_move
             : this.state.isMyTurn;
 
-        console.log("_handleMove: san:", payload.san, "is_bot_move:", payload.is_bot_move, "shouldPlaySound:", shouldPlaySound);
         if (shouldPlaySound) {
-            console.log("Playing opponent sound for SAN:", payload.san, "UCI:", payload.uci);
             if (payload.san) {
                 this._playSoundForMove(payload.san);
             } else {
@@ -512,6 +562,7 @@ export class ChessBoard extends Component {
         if (payload.game_id !== this.gameId) return;
 
         this.state.gameOver = true;
+        this._stopClockTimer();
         this._showGameResult(payload.result);
     }
 
@@ -574,6 +625,143 @@ export class ChessBoard extends Component {
         }
     }
 
+    // Time control methods
+    _initClockTimer() {
+        if (this.clockTimer) {
+            clearInterval(this.clockTimer);
+        }
+
+        // Update display every 100ms for smooth countdown
+        this.clockTimer = setInterval(() => {
+            this._updateClockDisplay();
+        }, 100);
+    }
+
+    _updateClockDisplay() {
+        if (!this.state.isTimed || this.state.gameOver) {
+            return;
+        }
+
+        if (this.state.activeClock === "none") {
+            return;
+        }
+
+        // Calculate elapsed since last sync
+        const now = Date.now();
+        const elapsed = this.state.lastSyncTime ? now - this.state.lastSyncTime : 0;
+
+        // Calculate display times (deduct from active clock)
+        let whiteDisplay = this.state.whiteTime;
+        let blackDisplay = this.state.blackTime;
+
+        if (this.state.activeClock === "white") {
+            whiteDisplay = Math.max(0, this.state.whiteTime - elapsed);
+        } else if (this.state.activeClock === "black") {
+            blackDisplay = Math.max(0, this.state.blackTime - elapsed);
+        }
+
+        // Update display strings
+        this.state.whiteTimeDisplay = this._formatTime(whiteDisplay);
+        this.state.blackTimeDisplay = this._formatTime(blackDisplay);
+
+        // Check for timeout - either player's time hitting 0
+        // Server determines winner based on whose turn it is
+        const activeClockTime = this.state.activeClock === "white" ? whiteDisplay : blackDisplay;
+
+        // If active player's time hits 0, claim timeout (server determines result)
+        if (activeClockTime <= 0 && !this._claimingTimeout) {
+            this._claimTimeout();
+        }
+    }
+
+    async _claimTimeout() {
+        // Prevent multiple claims
+        if (this._claimingTimeout) return;
+        this._claimingTimeout = true;
+
+        try {
+            const result = await rpc("/chess/game/" + this.gameId + "/claim_timeout", {});
+            if (result.success) {
+                this.state.gameOver = true;
+                this._stopClockTimer();
+                this._showGameResult(result.result);
+            } else if (result.error) {
+                // Server says no timeout - maybe clock sync issue, don't spam
+                console.warn("Timeout claim rejected:", result.error);
+            }
+        } catch (error) {
+            console.error("Failed to claim timeout:", error);
+        } finally {
+            // Allow retry after a delay if it failed
+            setTimeout(() => {
+                this._claimingTimeout = false;
+            }, 2000);
+        }
+    }
+
+    _stopClockTimer() {
+        if (this.clockTimer) {
+            clearInterval(this.clockTimer);
+            this.clockTimer = null;
+        }
+    }
+
+    _formatTime(milliseconds) {
+        if (milliseconds <= 0) {
+            return "0:00";
+        }
+
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const tenths = Math.floor((milliseconds % 1000) / 100);
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        } else if (totalSeconds < 20) {
+            // Show tenths when under 20 seconds
+            return `${minutes}:${seconds.toString().padStart(2, "0")}.${tenths}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        }
+    }
+
+    _syncTimeFromServer(timeData) {
+        if (!timeData) return;
+
+        this.state.whiteTime = timeData.white_time || 0;
+        this.state.blackTime = timeData.black_time || 0;
+        this.state.activeClock = timeData.active_clock || "none";
+        this.state.lastSyncTime = Date.now();
+
+        // Update display immediately
+        this.state.whiteTimeDisplay = this._formatTime(this.state.whiteTime);
+        this.state.blackTimeDisplay = this._formatTime(this.state.blackTime);
+    }
+
+    _isLowTime(milliseconds) {
+        return milliseconds > 0 && milliseconds < 30000; // Under 30 seconds
+    }
+
+    _isCriticalTime(milliseconds) {
+        return milliseconds > 0 && milliseconds < 10000; // Under 10 seconds
+    }
+
+    // Get current time for a player accounting for running clock
+    _getCurrentTime(player) {
+        if (!this.state.isTimed) return 0;
+
+        const baseTime = player === "white" ? this.state.whiteTime : this.state.blackTime;
+
+        if (this.state.activeClock === player && this.state.lastSyncTime) {
+            const elapsed = Date.now() - this.state.lastSyncTime;
+            return Math.max(0, baseTime - elapsed);
+        }
+
+        return baseTime;
+    }
+
     // Action handlers
     async onResign() {
         if (confirm(_t("Are you sure you want to resign?"))) {
@@ -620,6 +808,70 @@ export class ChessBoard extends Component {
     get turnIndicatorClass() {
         if (this.state.gameOver) return "text-muted";
         return this.state.isMyTurn ? "text-success fw-bold" : "text-warning";
+    }
+
+    // Clock getters for template
+    get opponentClockClass() {
+        if (!this.state.isTimed) return "";
+        const myColor = this.gameData?.my_color;
+        const opponentColor = myColor === "white" ? "black" : "white";
+        const opponentTime = this._getCurrentTime(opponentColor);
+        const isActive = this.state.activeClock === opponentColor;
+
+        let classes = ["o_chess_clock", "o_chess_clock_opponent"];
+        if (isActive) classes.push("o_clock_active");
+        if (this._isCriticalTime(opponentTime)) {
+            classes.push("o_clock_critical");
+        } else if (this._isLowTime(opponentTime)) {
+            classes.push("o_clock_low");
+        }
+        return classes.join(" ");
+    }
+
+    get myClockClass() {
+        if (!this.state.isTimed) return "";
+        const myColor = this.gameData?.my_color || "white";
+        const myTime = this._getCurrentTime(myColor);
+        const isActive = this.state.activeClock === myColor;
+
+        let classes = ["o_chess_clock", "o_chess_clock_mine"];
+        if (isActive) classes.push("o_clock_active");
+        if (this._isCriticalTime(myTime)) {
+            classes.push("o_clock_critical");
+        } else if (this._isLowTime(myTime)) {
+            classes.push("o_clock_low");
+        }
+        return classes.join(" ");
+    }
+
+    get opponentTimeDisplay() {
+        const myColor = this.gameData?.my_color;
+        return myColor === "white" ? this.state.blackTimeDisplay : this.state.whiteTimeDisplay;
+    }
+
+    get myTimeDisplay() {
+        const myColor = this.gameData?.my_color;
+        return myColor === "white" ? this.state.whiteTimeDisplay : this.state.blackTimeDisplay;
+    }
+
+    get opponentName() {
+        // For bot games, show the bot's name
+        if (this.gameData?.is_bot_game && this.gameData?.bot_name) {
+            return this.gameData.bot_name;
+        }
+        const myColor = this.gameData?.my_color;
+        if (myColor === "white") {
+            return this.gameData?.black_player?.name || "Black";
+        }
+        return this.gameData?.white_player?.name || "White";
+    }
+
+    get myName() {
+        const myColor = this.gameData?.my_color;
+        if (myColor === "white") {
+            return this.gameData?.white_player?.name || "White";
+        }
+        return this.gameData?.black_player?.name || "Black";
     }
 }
 

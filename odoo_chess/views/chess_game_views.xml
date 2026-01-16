@@ -63,6 +63,14 @@
                             <field name="winner_id" readonly="1" invisible="state != 'completed' or result == 'draw'"/>
                             <field name="is_bot_game" readonly="1"/>
                             <field name="bot_key" invisible="not is_bot_game" readonly="1"/>
+                            <field name="is_timed" invisible="1"/>
+                        </group>
+                    </group>
+                    <group invisible="not is_timed">
+                        <group string="Time Control">
+                            <field name="time_control_display" readonly="1"/>
+                            <field name="white_time_display" readonly="1" string="White Clock"/>
+                            <field name="black_time_display" readonly="1" string="Black Clock"/>
                         </group>
                     </group>
 
@@ -111,6 +119,7 @@
                 <field name="name"/>
                 <field name="white_player_id"/>
                 <field name="black_player_id"/>
+                <field name="time_control_display" optional="show"/>
                 <field name="state" decoration-info="state == 'pending'"
                        decoration-success="state == 'active'"
                        decoration-muted="state == 'completed'"
@@ -136,6 +145,8 @@
                 <field name="result"/>
                 <field name="is_my_turn"/>
                 <field name="is_bot_game"/>
+                <field name="is_timed"/>
+                <field name="time_control_display"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_content">
@@ -157,6 +168,11 @@
                                 </div>
                                 <div t-if="record.is_bot_game.raw_value">
                                     <span class="badge bg-info">vs Bot</span>
+                                </div>
+                                <div t-if="record.is_timed.raw_value">
+                                    <span class="badge bg-secondary">
+                                        <field name="time_control_display"/>
+                                    </span>
                                 </div>
                                 <div t-if="record.is_my_turn.raw_value and record.state.raw_value == 'active'">
                                     <span class="badge bg-warning">Your Turn!</span>
@@ -194,6 +210,9 @@
                 <separator/>
                 <filter string="vs Bot" name="bot_games" domain="[('is_bot_game', '=', True)]"/>
                 <filter string="vs Human" name="human_games" domain="[('is_bot_game', '=', False)]"/>
+                <separator/>
+                <filter string="Timed" name="timed_games" domain="[('is_timed', '=', True)]"/>
+                <filter string="Untimed" name="untimed_games" domain="[('is_timed', '=', False)]"/>
                 <group>
                     <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Result" name="group_result" context="{'group_by': 'result'}"/>

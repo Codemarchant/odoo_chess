@@ -54,6 +54,23 @@ class ChessInvitation(models.Model):
     )
     message = fields.Text(string='Challenge Message')
 
+    # Time Control
+    is_timed = fields.Boolean(string='Timed Game', default=False)
+    base_time = fields.Integer(
+        string='Base Time (seconds)',
+        default=0,
+        help='Initial time for each player in seconds'
+    )
+    increment = fields.Integer(
+        string='Increment (seconds)',
+        default=0,
+        help='Time added after each move in seconds'
+    )
+    time_control_display = fields.Char(
+        string='Time Control',
+        compute='_compute_time_control_display'
+    )
+
     # Computed
     is_expired = fields.Boolean(compute='_compute_is_expired')
 
@@ -62,6 +79,18 @@ class ChessInvitation(models.Model):
         now = fields.Datetime.now()
         for invitation in self:
             invitation.is_expired = invitation.expires_at and invitation.expires_at < now
+
+    @api.depends('is_timed', 'base_time', 'increment')
+    def _compute_time_control_display(self):
+        for inv in self:
+            if not inv.is_timed:
+                inv.time_control_display = 'Untimed'
+            else:
+                minutes = inv.base_time // 60
+                if inv.increment:
+                    inv.time_control_display = f'{minutes}+{inv.increment}'
+                else:
+                    inv.time_control_display = f'{minutes} min'
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -111,6 +140,7 @@ class ChessInvitation(models.Model):
             'inviter_rating': self.inviter_id.chess_rating,
             'reward_text': self.reward_text,
             'message': self.message,
+            'time_control_display': self.time_control_display,
         })
 
     def action_accept(self):
@@ -142,14 +172,26 @@ class ChessInvitation(models.Model):
                 white_player = self.invitee_id
                 black_player = self.inviter_id
 
-        # Create the game
-        game = self.env['chess.game'].create({
+        # Create the game with time control
+        game_vals = {
             'white_player_id': white_player.id,
             'black_player_id': black_player.id,
             'state': 'active',
             'reward_text': self.reward_text,
             'invitation_id': self.id,
-        })
+            # Time control fields
+            'is_timed': self.is_timed,
+            'base_time': self.base_time,
+            'increment': self.increment,
+        }
+
+        # Set initial time remaining (convert seconds to milliseconds)
+        if self.is_timed:
+            initial_time_ms = self.base_time * 1000
+            game_vals['white_time_remaining'] = initial_time_ms
+            game_vals['black_time_remaining'] = initial_time_ms
+
+        game = self.env['chess.game'].create(game_vals)
 
         self.write({
             'state': 'accepted',

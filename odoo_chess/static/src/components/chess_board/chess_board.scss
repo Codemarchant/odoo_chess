@@ -22,8 +22,32 @@
     width: 100% !important;
 }
 
+// Main game area - flexbox container for board + side panel
+.o_chess_game_area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+
+    // Desktop: row layout with side panel
+    @media (min-width: 992px) {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+}
+
 .o_chess_board_container {
     width: 100% !important;
+    max-width: 784px;
+    order: 1;
+
+    @media (min-width: 992px) {
+        width: auto !important;
+        flex-shrink: 0;
+    }
 }
 
 .o_chess_board {
@@ -31,6 +55,80 @@
     border: 2px solid #333;
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+// Mobile clocks (above/below board)
+.o_chess_clock_mobile {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 784px;
+
+    &.o_chess_clock_mobile_top {
+        order: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    &.o_chess_clock_mobile_bottom {
+        order: 2;
+        margin-top: 0.5rem;
+    }
+
+    // Hide on desktop
+    @media (min-width: 992px) {
+        display: none;
+    }
+}
+
+// Side panel (desktop only)
+.o_chess_side_panel {
+    display: none;
+
+    @media (min-width: 992px) {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 280px;
+        min-height: 400px;
+        max-height: 784px;
+        height: 100%;
+        order: 2;
+    }
+}
+
+.o_chess_side_clock {
+    flex-shrink: 0;
+}
+
+.o_chess_fact_panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0;
+    min-height: 100px;
+}
+
+.o_chess_fact_panel_untimed {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0;
+}
+
+// Mobile fact (below everything)
+.o_chess_fact_mobile {
+    display: block;
+    width: 100%;
+    max-width: 784px;
+    margin-left: auto;
+    margin-right: auto;
+
+    // Hide on desktop (shown in side panel instead)
+    @media (min-width: 992px) {
+        display: none;
+    }
 }
 
 // Legal move highlights
@@ -52,19 +150,103 @@
     padding: 0.5rem;
     background-color: #f8f9fa;
     border-radius: 4px;
+    max-width: 784px;
+
+    @media (min-width: 992px) {
+        max-width: calc(784px + 280px + 1.5rem);
+    }
 }
 
 .o_chess_controls {
+    max-width: 784px;
+    margin-left: auto;
+    margin-right: auto;
+
     .btn-group {
         width: 100%;
         display: flex;
         justify-content: center;
         gap: 0.5rem;
     }
+
+    @media (min-width: 992px) {
+        max-width: calc(784px + 280px + 1.5rem);
+    }
 }
 
+// Odoo fact card styling
 .o_chess_fact {
     border-left: 3px solid #714b67; // Odoo purple
+    background: #f8f9fa;
+    width: 100%;
+
+    .card-body {
+        padding: 0.75rem;
+    }
+}
+
+// Chess Clock Styles
+.o_chess_clock {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+    min-width: 200px;
+    width: 100%;
+    border: 2px solid #ddd;
+    transition: all 0.2s ease;
+
+    .o_clock_player_name {
+        font-weight: 500;
+        color: #333;
+        font-size: 0.9rem;
+    }
+
+    .o_clock_time {
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    &.o_clock_active {
+        background: #e3f2fd;
+        border-color: #2196f3;
+
+        .o_clock_time {
+            color: #1565c0;
+        }
+    }
+
+    &.o_clock_low {
+        background: #fff3e0;
+        border-color: #ff9800;
+
+        .o_clock_time {
+            color: #e65100;
+        }
+    }
+
+    &.o_clock_critical {
+        background: #ffebee;
+        border-color: #f44336;
+        animation: pulse-critical 0.5s infinite;
+
+        .o_clock_time {
+            color: #c62828;
+        }
+    }
+}
+
+@keyframes pulse-critical {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
 }
 
 // Kanban game card styles
@@ -86,13 +268,33 @@
     }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
+// Responsive adjustments for smaller screens
+@media (max-width: 576px) {
     .o_chess_board_wrapper {
         padding: 0.5rem;
     }
 
     .o_chess_board {
         max-width: 100% !important;
+    }
+
+    .o_chess_clock {
+        min-width: 150px;
+        padding: 0.5rem 1rem;
+
+        .o_clock_player_name {
+            font-size: 0.8rem;
+        }
+
+        .o_clock_time {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+// Medium screens - tablet breakpoint
+@media (min-width: 768px) and (max-width: 991px) {
+    .o_chess_clock_mobile {
+        max-width: 500px;
     }
 }

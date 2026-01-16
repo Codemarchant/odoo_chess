@@ -32,6 +32,23 @@ class ChessMove(models.Model):
     # Timing
     timestamp = fields.Datetime(string='Timestamp', default=fields.Datetime.now)
 
+    # Time control tracking
+    time_spent_ms = fields.Integer(
+        string='Time Spent (ms)',
+        default=0,
+        help='Time spent on this move in milliseconds'
+    )
+    white_time_after = fields.Integer(
+        string='White Time After (ms)',
+        default=0,
+        help='White player time remaining after this move in milliseconds'
+    )
+    black_time_after = fields.Integer(
+        string='Black Time After (ms)',
+        default=0,
+        help='Black player time remaining after this move in milliseconds'
+    )
+
     # Computed fields for display
     move_pair_number = fields.Integer(
         string='Move Pair',

@@ -95,6 +95,15 @@ class ChessController(http.Controller):
         except Exception as e:
             return {'error': str(e)}
 
+    @http.route('/chess/game/<int:game_id>/claim_timeout', type='json', auth='user')
+    def claim_timeout(self, game_id):
+        """Claim timeout win when opponent's time runs out."""
+        game = request.env['chess.game'].browse(game_id)
+        if not game.exists():
+            return {'error': 'Game not found'}
+
+        return game.action_claim_timeout()
+
     @http.route('/chess/game/<int:game_id>/legal_moves', type='json', auth='user')
     def get_legal_moves(self, game_id, square=None):
         """Get legal moves for the current position (optionally from a specific square)."""

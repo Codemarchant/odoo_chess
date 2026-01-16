@@ -15,13 +15,103 @@
                 </div>
             </div>
 
-            <!-- Chessboard Container -->
-            <div class="o_chess_board_container mb-3">
-                <div t-ref="board" class="o_chess_board"/>
+            <!-- Main Game Area: Board + Side Panel -->
+            <div class="o_chess_game_area">
+                <!-- Opponent Clock (mobile only - shown above board) -->
+                <div t-if="state.isTimed" class="o_chess_clock_mobile o_chess_clock_mobile_top">
+                    <div t-att-class="opponentClockClass">
+                        <span class="o_clock_player_name">
+                            <t t-esc="opponentName"/>
+                        </span>
+                        <span class="o_clock_time">
+                            <t t-esc="opponentTimeDisplay"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Chessboard Container -->
+                <div class="o_chess_board_container">
+                    <div t-ref="board" class="o_chess_board"/>
+                </div>
+
+                <!-- Player Clock (mobile only - shown below board) -->
+                <div t-if="state.isTimed" class="o_chess_clock_mobile o_chess_clock_mobile_bottom">
+                    <div t-att-class="myClockClass">
+                        <span class="o_clock_player_name">
+                            <t t-esc="myName"/> (You)
+                        </span>
+                        <span class="o_clock_time">
+                            <t t-esc="myTimeDisplay"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Side Panel (desktop only) -->
+                <div class="o_chess_side_panel">
+                    <!-- Opponent Clock -->
+                    <div t-if="state.isTimed" class="o_chess_side_clock">
+                        <div t-att-class="opponentClockClass">
+                            <span class="o_clock_player_name">
+                                <t t-esc="opponentName"/>
+                            </span>
+                            <span class="o_clock_time">
+                                <t t-esc="opponentTimeDisplay"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Odoo Fun Fact (middle) -->
+                    <div t-if="state.currentFact" class="o_chess_fact_panel">
+                        <div class="o_chess_fact card">
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    <i class="fa fa-lightbulb-o me-1"/>
+                                    <t t-esc="state.currentFact"/>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Player Clock -->
+                    <div t-if="state.isTimed" class="o_chess_side_clock">
+                        <div t-att-class="myClockClass">
+                            <span class="o_clock_player_name">
+                                <t t-esc="myName"/> (You)
+                            </span>
+                            <span class="o_clock_time">
+                                <t t-esc="myTimeDisplay"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder when no time control -->
+                    <div t-if="!state.isTimed and state.currentFact" class="o_chess_fact_panel_untimed">
+                        <div class="o_chess_fact card">
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    <i class="fa fa-lightbulb-o me-1"/>
+                                    <t t-esc="state.currentFact"/>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Odoo Fun Fact (mobile only) -->
+            <div t-if="state.currentFact" class="o_chess_fact_mobile mt-3">
+                <div class="o_chess_fact card bg-light">
+                    <div class="card-body py-2">
+                        <small class="text-muted">
+                            <i class="fa fa-lightbulb-o me-1"/>
+                            <t t-esc="state.currentFact"/>
+                        </small>
+                    </div>
+                </div>
             </div>
 
             <!-- Game Controls (only if game is active) -->
-            <div t-if="!state.gameOver" class="o_chess_controls mb-3">
+            <div t-if="!state.gameOver" class="o_chess_controls mt-3 mb-3">
                 <div class="btn-group" role="group">
                     <button t-if="state.isMyTurn and !state.drawOffered"
                             class="btn btn-outline-warning btn-sm"
@@ -51,16 +141,6 @@
             <!-- Last Move Display -->
             <div t-if="state.lastMove" class="o_chess_last_move text-muted small mb-2">
                 Last move: <t t-esc="state.lastMove.from"/> → <t t-esc="state.lastMove.to"/>
-            </div>
-
-            <!-- Odoo Fun Fact -->
-            <div t-if="state.currentFact" class="o_chess_fact card bg-light mt-3">
-                <div class="card-body py-2">
-                    <small class="text-muted">
-                        <i class="fa fa-lightbulb-o me-1"/>
-                        <t t-esc="state.currentFact"/>
-                    </small>
-                </div>
             </div>
         </div>
     </t>
