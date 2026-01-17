@@ -39,12 +39,10 @@
             <field name="category">feature</field>
         </record>
 
-        <!--
         <record id="fact_feature_4" model="chess.odoo.fact">
-            <field name="fact">The mail.thread mixin provides automatic activity tracking - that's why game invitations show up in your activities!</field>
+            <field name="fact">Odoo's QWeb templating engine renders all views - it's XML that becomes beautiful HTML!</field>
             <field name="category">feature</field>
         </record>
-        -->
 
         <record id="fact_feature_5" model="chess.odoo.fact">
             <field name="fact">Odoo's ORM supports computed fields with dependencies - like how the current player is automatically calculated from the FEN position!</field>
@@ -111,6 +109,110 @@
 
         <record id="fact_chess_3" model="chess.odoo.fact">
             <field name="fact">The Elo rating system used here was created by Arpad Elo in 1960 for the US Chess Federation.</field>
+            <field name="category">fun</field>
+        </record>
+
+        <!-- More History Facts -->
+        <record id="fact_history_5" model="chess.odoo.fact">
+            <field name="fact">Before becoming Odoo, the software went through three names: TinyERP (2005), OpenERP (2009), and Odoo (2014).</field>
+            <field name="category">history</field>
+        </record>
+
+        <record id="fact_history_6" model="chess.odoo.fact">
+            <field name="fact">Odoo's source code was first published on Launchpad in 2008, later moving to GitHub in 2014.</field>
+            <field name="category">history</field>
+        </record>
+
+        <record id="fact_history_7" model="chess.odoo.fact">
+            <field name="fact">Fabien Pinckaers started coding TinyERP while still a student at UCLouvain in Belgium!</field>
+            <field name="category">history</field>
+        </record>
+
+        <!-- More Feature Facts -->
+        <record id="fact_feature_6" model="chess.odoo.fact">
+            <field name="fact">Odoo's discuss module supports real-time messaging - perfect for trash talking your chess opponent!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_7" model="chess.odoo.fact">
+            <field name="fact">Record rules in Odoo ensure you can only see your own chess games - security by design!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_8" model="chess.odoo.fact">
+            <field name="fact">Odoo's asset bundling system automatically minifies and combines JavaScript files for faster loading.</field>
+            <field name="category">feature</field>
+        </record>
+
+        <record id="fact_feature_9" model="chess.odoo.fact">
+            <field name="fact">The Odoo registry caches all model definitions - that's why the app runs fast after startup!</field>
+            <field name="category">feature</field>
+        </record>
+
+        <!-- More Tips -->
+        <record id="fact_tip_5" model="chess.odoo.fact">
+            <field name="fact">Tip: Double-click on editable fields in list view to edit them inline without opening the form!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_6" model="chess.odoo.fact">
+            <field name="fact">Use Alt+Shift+arrow keys to navigate between records without using your mouse!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_7" model="chess.odoo.fact">
+            <field name="fact">Tip: Add "debug=1" to your URL to enable developer mode and see technical field names!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <record id="fact_tip_8" model="chess.odoo.fact">
+            <field name="fact">You can export any list view to Excel by clicking the Actions menu and selecting Export!</field>
+            <field name="category">tip</field>
+        </record>
+
+        <!-- More Fun Facts -->
+        <record id="fact_fun_6" model="chess.odoo.fact">
+            <field name="fact">Odoo runs on PostgreSQL - one of the most reliable databases in the world!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_7" model="chess.odoo.fact">
+            <field name="fact">There are more possible chess games than atoms in the observable universe. Odoo can store them all!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_8" model="chess.odoo.fact">
+            <field name="fact">The word "checkmate" comes from the Persian phrase "shah mat" meaning "the king is helpless".</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_9" model="chess.odoo.fact">
+            <field name="fact">The longest possible chess game is 5,949 moves. That's a lot of Odoo bus notifications!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_10" model="chess.odoo.fact">
+            <field name="fact">Magnus Carlsen's peak Elo rating was 2882. What's yours in Odoo Chess?</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_11" model="chess.odoo.fact">
+            <field name="fact">The knight is the only chess piece that can jump over other pieces - and the trickiest to code!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_12" model="chess.odoo.fact">
+            <field name="fact">A pawn that reaches the other side can become a queen - talk about a career promotion!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_13" model="chess.odoo.fact">
+            <field name="fact">The fastest checkmate possible (Fool's Mate) takes only 2 moves. Don't let that be you!</field>
+            <field name="category">fun</field>
+        </record>
+
+        <record id="fact_fun_14" model="chess.odoo.fact">
+            <field name="fact">Chess was added to the Olympic Games in 2024. Odoo Chess World Championship when?</field>
             <field name="category">fun</field>
         </record>
 

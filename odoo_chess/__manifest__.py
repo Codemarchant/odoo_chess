@@ -2,29 +2,38 @@
 {
     'name': 'Odoo Chess',
     'version': '19.0.1.0.0',
-    'category': 'Human Resources/Employees',
-    'summary': 'Multiplayer chess game for Odoo users',
+    'category': 'Productivity',
+    'summary': 'Play chess against colleagues or AI bots with Elo ratings, time controls, and leaderboards',
     'description': """
 Odoo Chess - Multiplayer Chess Game
 ===================================
 
-A fully integrated multiplayer chess game that runs entirely inside Odoo.
+A fully integrated multiplayer chess game that runs entirely inside Odoo. Challenge colleagues, play against AI bots, and compete on the leaderboard!
 
-Features:
----------
-* Create chess games and invite other Odoo users
-* Real-time gameplay using Odoo's longpolling bus
-* Server-side move validation with python-chess
-* Elo rating system for all players
-* Leaderboard showing top players
-* Play against bots (various difficulty levels)
-* Customizable stakes/rewards for games
-* Game persistence - resume disconnected games
-* Resign and draw offer controls
+Features
+--------
+* **Real-Time Multiplayer**: Challenge any Odoo user with instant move synchronization via Odoo's longpolling bus
+* **AI Bot Opponents**: Practice against 4 difficulty levels - Beginner Bob (800), Casual Carl (1200), Serious Sam (1500), Randy Ram (1800)
+* **Time Controls**: Bullet, Blitz, Rapid, Classical presets plus custom time with increment support
+* **Elo Rating System**: Track skill with K-factor 32 ratings starting at 1200
+* **Leaderboard**: Kanban view of top players with win/loss/draw statistics
+* **Game Controls**: Resign, offer/accept/decline draws, claim draws by repetition or fifty-move rule, timeout claims
+* **Invitation System**: Send challenges with optional stakes, real-time notifications, auto-created chat channels
+* **Sound Effects**: Audio feedback for moves, captures, castling, check, and game results
+* **Responsive Design**: Play on desktop or mobile with adaptive board sizing
+* **Odoo Fun Facts**: Learn about Odoo while waiting for opponent's move
 
-Requirements:
--------------
-* python-chess library (pip install python-chess)
+Technical Details
+-----------------
+* Server-side move validation with python-chess library
+* OWL components with chessboard.js integration
+* Chess Player and Chess Manager security groups
+* Mail thread integration for game comments
+* FEN/PGN notation tracking for complete game history
+
+Requirements
+------------
+* python-chess library: pip install chess
     """,
     'author': 'Codemarchant',
     'website': 'https://codemarchant.com',
