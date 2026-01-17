@@ -60,8 +60,8 @@
                         </div>
                     </div>
 
-                    <!-- Odoo Fun Fact (middle) -->
-                    <div t-if="state.currentFact" class="o_chess_fact_panel">
+                    <!-- Odoo Fun Fact (middle, shown between clocks when timed) -->
+                    <div t-if="state.isTimed and state.currentFact" class="o_chess_fact_panel">
                         <div class="o_chess_fact card">
                             <div class="card-body">
                                 <small class="text-muted">
@@ -141,6 +141,36 @@
             <!-- Last Move Display -->
             <div t-if="state.lastMove" class="o_chess_last_move text-muted small mb-2">
                 Last move: <t t-esc="state.lastMove.from"/> → <t t-esc="state.lastMove.to"/>
+            </div>
+
+            <!-- Promotion Dialog -->
+            <div t-if="state.showPromotion" class="o_chess_promotion_overlay" t-on-click="onCancelPromotion">
+                <div class="o_chess_promotion_dialog" t-on-click.stop="">
+                    <div class="o_chess_promotion_title">Choose promotion piece</div>
+                    <div class="o_chess_promotion_pieces">
+                        <button class="o_chess_promotion_piece" t-on-click="() => this.onSelectPromotion('q')"
+                                t-att-title="'Queen'">
+                            <img t-att-src="'/odoo_chess/static/lib/chessboardjs/img/chesspieces/wikipedia/' + state.promotionColor + 'Q.png'"
+                                 alt="Queen"/>
+                        </button>
+                        <button class="o_chess_promotion_piece" t-on-click="() => this.onSelectPromotion('r')"
+                                t-att-title="'Rook'">
+                            <img t-att-src="'/odoo_chess/static/lib/chessboardjs/img/chesspieces/wikipedia/' + state.promotionColor + 'R.png'"
+                                 alt="Rook"/>
+                        </button>
+                        <button class="o_chess_promotion_piece" t-on-click="() => this.onSelectPromotion('b')"
+                                t-att-title="'Bishop'">
+                            <img t-att-src="'/odoo_chess/static/lib/chessboardjs/img/chesspieces/wikipedia/' + state.promotionColor + 'B.png'"
+                                 alt="Bishop"/>
+                        </button>
+                        <button class="o_chess_promotion_piece" t-on-click="() => this.onSelectPromotion('n')"
+                                t-att-title="'Knight'">
+                            <img t-att-src="'/odoo_chess/static/lib/chessboardjs/img/chesspieces/wikipedia/' + state.promotionColor + 'N.png'"
+                                 alt="Knight"/>
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-secondary mt-2" t-on-click="onCancelPromotion">Cancel</button>
+                </div>
             </div>
         </div>
     </t>

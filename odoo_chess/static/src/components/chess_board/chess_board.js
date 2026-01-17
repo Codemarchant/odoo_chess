@@ -57,6 +57,10 @@ export class ChessBoard extends Component {
             isCheck: false,
             drawOffered: false,
             currentFact: "",
+            // Promotion dialog state
+            showPromotion: false,
+            promotionColor: "w",  // 'w' or 'b'
+            pendingPromotion: null,  // {source, target, piece, oldFen}
             // Time control state
             isTimed: false,
             whiteTime: 0,  // milliseconds
@@ -294,21 +298,27 @@ export class ChessBoard extends Component {
             return "snapback";
         }
 
-        // Handle promotion (simplified - always queen)
-        let uciMove = source + target;
-
         // Check for pawn promotion
         const isPawn = piece.toLowerCase().includes("p");
         const isPromotion = isPawn && (target[1] === "8" || target[1] === "1");
-        if (isPromotion) {
-            uciMove += "q"; // Auto-promote to queen
-        }
 
         // Store the old FEN for rollback
         const oldFen = this.state.fen;
 
+        if (isPromotion) {
+            // Show promotion dialog and wait for user selection
+            this.state.showPromotion = true;
+            this.state.promotionColor = piece.startsWith("w") ? "w" : "b";
+            this.state.pendingPromotion = { source, target, piece, oldFen };
+            // Don't make the move yet - wait for promotion piece selection
+            return;
+        }
+
+        // Normal move (no promotion)
+        const uciMove = source + target;
+
         // Use chess.js to determine move type and play appropriate sound
-        this._playMoveSound(source, target, isPromotion ? "q" : null);
+        this._playMoveSound(source, target, null);
 
         // Track this move to avoid double-animation from bus
         this._pendingMoveUci = uciMove;
@@ -732,6 +742,42 @@ export class ChessBoard extends Component {
         }
 
         return baseTime;
+    }
+
+    // Promotion piece selection handler
+    onSelectPromotion(piece) {
+        if (!this.state.pendingPromotion) return;
+
+        const { source, target, oldFen } = this.state.pendingPromotion;
+        const uciMove = source + target + piece;
+
+        // Hide promotion dialog
+        this.state.showPromotion = false;
+        this.state.pendingPromotion = null;
+
+        // Play move sound
+        this._playMoveSound(source, target, piece);
+
+        // Track this move to avoid double-animation from bus
+        this._pendingMoveUci = uciMove;
+
+        // Make the move request
+        this._makeMove(uciMove, oldFen, source, target);
+    }
+
+    onCancelPromotion() {
+        if (!this.state.pendingPromotion) return;
+
+        const { oldFen } = this.state.pendingPromotion;
+
+        // Reset board to previous position
+        if (this.board) {
+            this.board.position(oldFen, false);
+        }
+
+        // Hide promotion dialog
+        this.state.showPromotion = false;
+        this.state.pendingPromotion = null;
     }
 
     // Action handlers

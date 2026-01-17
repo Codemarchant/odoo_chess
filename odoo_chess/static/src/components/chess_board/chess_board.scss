@@ -276,3 +276,67 @@
         max-width: 500px;
     }
 }
+
+// Promotion dialog styles
+.o_chess_promotion_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.o_chess_promotion_dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.o_chess_promotion_title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.o_chess_promotion_pieces {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.o_chess_promotion_piece {
+    background: #f5f5f5;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: #e3f2fd;
+        border-color: #2196f3;
+        transform: scale(1.05);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+
+    img {
+        width: 60px;
+        height: 60px;
+
+        @media (max-width: 576px) {
+            width: 48px;
+            height: 48px;
+        }
+    }
+}
