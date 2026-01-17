@@ -36,7 +36,8 @@ Requirements
 * python-chess library: pip install chess
     """,
     'author': 'Codemarchant',
-    'website': 'https://codemarchant.com',
+    'website': 'https://github.com/Codemarchant/odoo_chess',
+    'license': 'LGPL-3',
     'support': 'support@codemarchant.com',
     'depends': [
         'base',
