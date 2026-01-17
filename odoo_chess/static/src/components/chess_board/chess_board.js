@@ -332,6 +332,12 @@ export class ChessBoard extends Component {
     }
 
     async _makeMove(uciMove, oldFen, source, target) {
+        // For bot games, freeze clocks while waiting for bot response
+        const savedActiveClock = this.state.activeClock;
+        if (this.gameData?.is_bot_game && this.state.isTimed) {
+            this.state.activeClock = 'none';
+        }
+
         try {
             const result = await rpc("/chess/game/" + this.gameId + "/move", {
                 uci_move: uciMove,
@@ -340,6 +346,10 @@ export class ChessBoard extends Component {
             if (result.error) {
                 // Clear pending move flag
                 this._pendingMoveUci = null;
+                // Restore clock state on error (for bot games)
+                if (this.gameData?.is_bot_game && this.state.isTimed) {
+                    this.state.activeClock = savedActiveClock;
+                }
                 // Silently reset board position on invalid move (no notification)
                 if (this.board) {
                     this.board.position(oldFen, false);
@@ -355,6 +365,15 @@ export class ChessBoard extends Component {
             this.state.fen = result.fen;
             this.state.isMyTurn = result.is_my_turn;
             this.state.lastMove = { from: source, to: target };
+
+            // Sync time from response (for timed games)
+            if (this.state.isTimed && result.white_time !== undefined) {
+                this._syncTimeFromServer({
+                    white_time: result.white_time,
+                    black_time: result.black_time,
+                    active_clock: result.active_clock,
+                });
+            }
 
             // Sync chess.js to server's authoritative FEN
             if (this.chess) {
@@ -379,6 +398,10 @@ export class ChessBoard extends Component {
         } catch (error) {
             console.error("Move error:", error);
             this._pendingMoveUci = null;
+            // Restore clock state on error (for bot games)
+            if (this.gameData?.is_bot_game && this.state.isTimed) {
+                this.state.activeClock = savedActiveClock;
+            }
             this.notification.add(_t("Failed to make move"), { type: "danger" });
             // Ensure board is at old position (no animation)
             if (this.board) {
