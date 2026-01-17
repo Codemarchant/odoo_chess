@@ -706,10 +706,6 @@ class ChessGame(models.Model):
             # Use sudo to make the bot move
             self.sudo().action_make_move(bot_uci)
 
-    def _get_bus_channel(self):
-        """Get the bus channel name for this game."""
-        return f'chess_game_{self.id}'
-
     def _broadcast_move(self, uci, san, fen, is_bot_move=False, time_info=None):
         """Broadcast move to all participants via bus.
 

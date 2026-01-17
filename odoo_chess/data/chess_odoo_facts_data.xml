@@ -39,10 +39,12 @@
             <field name="category">feature</field>
         </record>
 
+        <!--
         <record id="fact_feature_4" model="chess.odoo.fact">
             <field name="fact">The mail.thread mixin provides automatic activity tracking - that's why game invitations show up in your activities!</field>
             <field name="category">feature</field>
         </record>
+        -->
 
         <record id="fact_feature_5" model="chess.odoo.fact">
             <field name="fact">Odoo's ORM supports computed fields with dependencies - like how the current player is automatically calculated from the FEN position!</field>

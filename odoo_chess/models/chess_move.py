@@ -50,22 +50,11 @@ class ChessMove(models.Model):
     )
 
     # Computed fields for display
-    move_pair_number = fields.Integer(
-        string='Move Pair',
-        compute='_compute_move_pair_number',
-        store=True
-    )
     is_white_move = fields.Boolean(
         string='White Move',
         compute='_compute_is_white_move',
         store=True
     )
-
-    @api.depends('sequence')
-    def _compute_move_pair_number(self):
-        for move in self:
-            # Move pair: 1 for moves 1-2, 2 for moves 3-4, etc.
-            move.move_pair_number = (move.sequence + 1) // 2 + ((move.sequence + 1) % 2)
 
     @api.depends('sequence')
     def _compute_is_white_move(self):

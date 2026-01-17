@@ -132,64 +132,6 @@
         </field>
     </record>
 
-    <!-- Chess Game Kanban View -->
-    <record id="view_chess_game_kanban" model="ir.ui.view">
-        <field name="name">chess.game.kanban</field>
-        <field name="model">chess.game</field>
-        <field name="arch" type="xml">
-            <kanban default_group_by="state" class="o_chess_game_kanban" create="false">
-                <field name="name"/>
-                <field name="state"/>
-                <field name="white_player_id"/>
-                <field name="black_player_id"/>
-                <field name="result"/>
-                <field name="is_my_turn"/>
-                <field name="is_bot_game"/>
-                <field name="is_timed"/>
-                <field name="time_control_display"/>
-                <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_content">
-                            <div class="o_kanban_record_top">
-                                <div class="o_kanban_record_headings">
-                                    <strong class="o_kanban_record_title">
-                                        <field name="name"/>
-                                    </strong>
-                                </div>
-                            </div>
-                            <div class="o_kanban_record_body">
-                                <div>
-                                    <span class="text-muted">White:</span>
-                                    <field name="white_player_id"/>
-                                </div>
-                                <div>
-                                    <span class="text-muted">Black:</span>
-                                    <field name="black_player_id"/>
-                                </div>
-                                <div t-if="record.is_bot_game.raw_value">
-                                    <span class="badge bg-info">vs Bot</span>
-                                </div>
-                                <div t-if="record.is_timed.raw_value">
-                                    <span class="badge bg-secondary">
-                                        <field name="time_control_display"/>
-                                    </span>
-                                </div>
-                                <div t-if="record.is_my_turn.raw_value and record.state.raw_value == 'active'">
-                                    <span class="badge bg-warning">Your Turn!</span>
-                                </div>
-                                <div t-if="record.state.raw_value == 'completed'">
-                                    <span class="badge bg-secondary">
-                                        <field name="result"/>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </t>
-                </templates>
-            </kanban>
-        </field>
-    </record>
-
     <!-- Chess Game Search View -->
     <record id="view_chess_game_search" model="ir.ui.view">
         <field name="name">chess.game.search</field>
@@ -226,7 +168,7 @@
     <record id="action_chess_games" model="ir.actions.act_window">
         <field name="name">My Chess Games</field>
         <field name="res_model">chess.game</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">list,form</field>
         <field name="context">{'search_default_my_games': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -242,7 +184,7 @@
     <record id="action_chess_games_all" model="ir.actions.act_window">
         <field name="name">All Chess Games</field>
         <field name="res_model">chess.game</field>
-        <field name="view_mode">list,kanban,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No chess games in the system yet.

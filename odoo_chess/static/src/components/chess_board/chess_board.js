@@ -377,34 +377,6 @@ export class ChessBoard extends Component {
         }
     }
 
-    _onSnapEnd() {
-        // No longer needed - we don't use snapback for valid moves
-        // Only used when piece is dropped offboard or on same square
-    }
-
-    _onMouseoverSquare(square, piece) {
-        // Disabled - API calls on mouseover cause lag and race conditions
-        // Users can see valid moves when dragging a piece
-    }
-
-    _onMouseoutSquare(square, piece) {
-        // Disabled - see _onMouseoverSquare
-    }
-
-    _highlightLegalMoves(moves) {
-        for (const move of moves) {
-            const targetSquare = document.querySelector(`.square-${move.to}`);
-            if (targetSquare) {
-                targetSquare.classList.add("highlight-legal");
-            }
-        }
-    }
-
-    _removeHighlights() {
-        const highlights = document.querySelectorAll(".highlight-legal");
-        highlights.forEach((el) => el.classList.remove("highlight-legal"));
-    }
-
     // Sound methods
     _playSound(soundName) {
         const sound = this.sounds[soundName];

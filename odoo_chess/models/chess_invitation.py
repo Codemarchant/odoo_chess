@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import random
-from datetime import timedelta
 
 from markupsafe import Markup
 
@@ -31,13 +30,11 @@ class ChessInvitation(models.Model):
         'res.users',
         string='Invitee',
         required=True,
-        domain=[('share', '=', False)]  # Only internal users
     )
     state = fields.Selection([
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
         ('declined', 'Declined'),
-        ('expired', 'Expired'),
         ('cancelled', 'Cancelled'),
     ], default='pending', tracking=True, string='Status')
 
@@ -48,10 +45,6 @@ class ChessInvitation(models.Model):
     ], default='random', string='Color Choice')
 
     reward_text = fields.Text(string='Stakes/Reward')
-    expires_at = fields.Datetime(
-        string='Expires At',
-        default=lambda self: fields.Datetime.now() + timedelta(hours=24)
-    )
     message = fields.Text(string='Challenge Message')
 
     # Time Control
@@ -70,15 +63,6 @@ class ChessInvitation(models.Model):
         string='Time Control',
         compute='_compute_time_control_display'
     )
-
-    # Computed
-    is_expired = fields.Boolean(compute='_compute_is_expired')
-
-    @api.depends('expires_at')
-    def _compute_is_expired(self):
-        now = fields.Datetime.now()
-        for invitation in self:
-            invitation.is_expired = invitation.expires_at and invitation.expires_at < now
 
     @api.depends('is_timed', 'base_time', 'increment')
     def _compute_time_control_display(self):
@@ -149,10 +133,6 @@ class ChessInvitation(models.Model):
 
         if self.state != 'pending':
             raise UserError(_('This invitation is no longer pending'))
-
-        if self.is_expired:
-            self.state = 'expired'
-            raise UserError(_('This invitation has expired'))
 
         if self.env.user != self.invitee_id:
             raise UserError(_('Only the invitee can accept this invitation'))
@@ -297,15 +277,4 @@ class ChessInvitation(models.Model):
         return self.search([
             ('invitee_id', '=', self.env.user.id),
             ('state', '=', 'pending'),
-            ('expires_at', '>', fields.Datetime.now()),
         ])
-
-    @api.model
-    def _cron_expire_invitations(self):
-        """Cron job to expire old invitations."""
-        expired = self.search([
-            ('state', '=', 'pending'),
-            ('expires_at', '<', fields.Datetime.now()),
-        ])
-        expired.write({'state': 'expired'})
-        return True

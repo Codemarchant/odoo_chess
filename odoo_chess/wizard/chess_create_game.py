@@ -17,11 +17,7 @@ class ChessCreateGame(models.TransientModel):
     ], default='human', string='Game Type', required=True)
 
     # Human opponent
-    opponent_id = fields.Many2one(
-        'res.users',
-        string='Opponent',
-        domain="[('share', '=', False), ('id', '!=', uid)]"
-    )
+    opponent_id = fields.Many2one('res.users', string='Opponent')
 
     # Bot opponent
     bot_key = fields.Selection(selection=get_bot_selection, string='Bot Opponent')

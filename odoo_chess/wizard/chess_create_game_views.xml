@@ -17,7 +17,8 @@
                         <field name="opponent_id"
                                invisible="game_type != 'human'"
                                required="game_type == 'human'"
-                               options="{'no_create': True}"/>
+                               options="{'no_create': True}"
+                               domain="[('share', '=', False), ('id', '!=', uid), ('all_group_ids', 'in', [%(odoo_chess.group_chess_user)d])]"/>
                         <field name="bot_key"
                                invisible="game_type != 'bot'"
                                required="game_type == 'bot'"/>

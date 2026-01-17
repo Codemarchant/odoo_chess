@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 
 from odoo import http
@@ -168,7 +167,6 @@ class ChessController(http.Controller):
             'inviter_rating': inv.inviter_id.chess_rating,
             'reward_text': inv.reward_text,
             'message': inv.message,
-            'expires_at': inv.expires_at.isoformat() if inv.expires_at else None,
         } for inv in invitations]
 
     @http.route('/chess/invitation/<int:invitation_id>/accept', type='json', auth='user')
