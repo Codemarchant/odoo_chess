@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import UserError
@@ -91,14 +91,14 @@ class ChessInvitation(models.Model):
         invitation_url = self._notify_get_action_link('view')
 
         body_parts = [
-            '<p><strong>%s</strong> has challenged you to a game of chess!</p>' % self.inviter_id.name,
+            '<p><strong>%s</strong> has challenged you to a game of chess!</p>' % escape(self.inviter_id.name),
         ]
 
         if self.message:
-            body_parts.append('<p><em>"%s"</em></p>' % self.message)
+            body_parts.append('<p><em>"%s"</em></p>' % escape(self.message))
 
         if self.reward_text:
-            body_parts.append('<p><strong>Stakes:</strong> %s</p>' % self.reward_text)
+            body_parts.append('<p><strong>Stakes:</strong> %s</p>' % escape(self.reward_text))
 
         body_parts.append(
             '<p><a href="%s" class="btn btn-primary">View Challenge</a></p>' % invitation_url
