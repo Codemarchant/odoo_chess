@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Odoo Chess',
-    'version': '18.0.1.0.0',
+    'version': '17.0.1.0.0',
     'category': 'Productivity',
     'summary': 'Play chess against colleagues or AI bots with Elo ratings, time controls, and leaderboards',
     'description': """
@@ -61,8 +61,6 @@ Requirements
     ],
     'assets': {
         'web.assets_backend': [
-            # Ensure jQuery is loaded before chessboard.js (which depends on window.jQuery)
-            ('include', 'web._assets_jquery'),
             'odoo_chess/static/lib/chessboardjs/css/chessboard-1.0.0.min.css',
             'odoo_chess/static/lib/chessboardjs/js/chessboard-1.0.0.min.js',
             'odoo_chess/static/lib/chessjs/chess.min.js',

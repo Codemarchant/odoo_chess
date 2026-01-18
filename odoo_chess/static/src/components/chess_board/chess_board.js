@@ -5,8 +5,7 @@ import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { _t } from "@web/core/l10n/translation";
-import { rpc } from "@web/core/network/rpc";
-import { ensureJQuery } from "@web/core/ensure_jquery";
+import { jsonrpc } from "@web/core/network/rpc_service";
 
 /**
  * ChessBoard OWL Component
@@ -22,7 +21,8 @@ export class ChessBoard extends Component {
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.action = useService("action");
-        this.busService = useService("bus_service");
+        // Bypass useService check which fails for bus_service in some Odoo 17 versions
+        this.busService = this.env.services.bus_service;
 
         this.boardRef = useRef("board");
         this.board = null;
@@ -47,6 +47,7 @@ export class ChessBoard extends Component {
         this._boundHandleGameEnd = this._handleGameEnd.bind(this);
         this._boundHandleDrawOffer = this._handleDrawOffer.bind(this);
         this._boundHandleDrawDeclined = this._handleDrawDeclined.bind(this);
+        this._boundHandleNotification = this._handleNotification.bind(this);
 
         this.state = useState({
             fen: this.props.record.data[this.props.name] || "start",
@@ -110,36 +111,48 @@ export class ChessBoard extends Component {
     }
 
     async _subscribeToBus() {
-        if (!this.gameId) return;
+        if (!this.gameId || !this.busService) return;
 
         // Channel format: chess_game_{id} - matches Python _broadcast methods
         this.busChannel = `chess_game_${this.gameId}`;
 
         // Add channel to bus service
-        await this.busService.addChannel(this.busChannel);
+        this.busService.addChannel(this.busChannel);
 
-        // Subscribe to specific notification types
-        this.busService.subscribe("chess_move", this._boundHandleMove);
-        this.busService.subscribe("chess_game_end", this._boundHandleGameEnd);
-        this.busService.subscribe("chess_draw_offer", this._boundHandleDrawOffer);
-        this.busService.subscribe("chess_draw_declined", this._boundHandleDrawDeclined);
+        // Subscribe to notification events
+        this.busService.addEventListener("notification", this._boundHandleNotification);
     }
 
     _unsubscribeFromBus() {
+        if (!this.busService) return;
+
         if (this.busChannel) {
             this.busService.deleteChannel(this.busChannel);
         }
-        // Unsubscribe from notification types
-        this.busService.unsubscribe("chess_move", this._boundHandleMove);
-        this.busService.unsubscribe("chess_game_end", this._boundHandleGameEnd);
-        this.busService.unsubscribe("chess_draw_offer", this._boundHandleDrawOffer);
-        this.busService.unsubscribe("chess_draw_declined", this._boundHandleDrawDeclined);
+        
+        this.busService.removeEventListener("notification", this._boundHandleNotification);
+    }
+
+    _handleNotification({ detail: notifications }) {
+        for (const { type, payload } of notifications) {
+            switch (type) {
+                case "chess_move":
+                    this._handleMove(payload);
+                    break;
+                case "chess_game_end":
+                    this._handleGameEnd(payload);
+                    break;
+                case "chess_draw_offer":
+                    this._handleDrawOffer(payload);
+                    break;
+                case "chess_draw_declined":
+                    this._handleDrawDeclined(payload);
+                    break;
+            }
+        }
     }
 
     async _initBoard() {
-        // Ensure jQuery is loaded (required by chessboard.js)
-        await ensureJQuery();
-
         // Wait for chessboard.js to be available
         if (typeof Chessboard === "undefined") {
             console.warn("Chessboard.js not loaded yet, retrying...");
@@ -197,7 +210,7 @@ export class ChessBoard extends Component {
         if (!this.gameId) return;
 
         try {
-            const result = await rpc("/chess/game/" + this.gameId + "/state", {});
+            const result = await jsonrpc("/chess/game/" + this.gameId + "/state", {});
             if (result.error) {
                 this.notification.add(result.error, { type: "danger" });
                 return;
@@ -339,7 +352,7 @@ export class ChessBoard extends Component {
         }
 
         try {
-            const result = await rpc("/chess/game/" + this.gameId + "/move", {
+            const result = await jsonrpc("/chess/game/" + this.gameId + "/move", {
                 uci_move: uciMove,
             });
 
@@ -621,7 +634,7 @@ export class ChessBoard extends Component {
 
     async _loadRandomFact() {
         try {
-            const result = await rpc("/chess/random_fact", {});
+            const result = await jsonrpc("/chess/random_fact", {});
             if (result.fact) {
                 this.state.currentFact = result.fact;
             }
@@ -685,7 +698,7 @@ export class ChessBoard extends Component {
         this._claimingTimeout = true;
 
         try {
-            const result = await rpc("/chess/game/" + this.gameId + "/claim_timeout", {});
+            const result = await jsonrpc("/chess/game/" + this.gameId + "/claim_timeout", {});
             if (result.success) {
                 this.state.gameOver = true;
                 this._stopClockTimer();
@@ -807,7 +820,7 @@ export class ChessBoard extends Component {
     async onResign() {
         if (confirm(_t("Are you sure you want to resign?"))) {
             try {
-                await rpc("/chess/game/" + this.gameId + "/resign", {});
+                await jsonrpc("/chess/game/" + this.gameId + "/resign", {});
             } catch (error) {
                 this.notification.add(_t("Failed to resign"), { type: "danger" });
             }
@@ -816,7 +829,7 @@ export class ChessBoard extends Component {
 
     async onOfferDraw() {
         try {
-            await rpc("/chess/game/" + this.gameId + "/offer_draw", {});
+            await jsonrpc("/chess/game/" + this.gameId + "/offer_draw", {});
             this.notification.add(_t("Draw offer sent"), { type: "info" });
         } catch (error) {
             this.notification.add(_t("Failed to offer draw"), { type: "danger" });
@@ -825,7 +838,7 @@ export class ChessBoard extends Component {
 
     async onAcceptDraw() {
         try {
-            await rpc("/chess/game/" + this.gameId + "/accept_draw", {});
+            await jsonrpc("/chess/game/" + this.gameId + "/accept_draw", {});
         } catch (error) {
             this.notification.add(_t("Failed to accept draw"), { type: "danger" });
         }
@@ -833,7 +846,7 @@ export class ChessBoard extends Component {
 
     async onDeclineDraw() {
         try {
-            await rpc("/chess/game/" + this.gameId + "/decline_draw", {});
+            await jsonrpc("/chess/game/" + this.gameId + "/decline_draw", {});
             this.state.drawOffered = false;
         } catch (error) {
             this.notification.add(_t("Failed to decline draw"), { type: "danger" });

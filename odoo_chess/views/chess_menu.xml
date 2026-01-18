@@ -7,7 +7,7 @@
     <record id="action_chess_facts" model="ir.actions.act_window">
         <field name="name">Odoo Facts</field>
         <field name="res_model">chess.odoo.fact</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
     </record>
 
     <!-- Main Chess Menu -->
@@ -83,11 +83,11 @@
         <field name="name">chess.odoo.fact.list</field>
         <field name="model">chess.odoo.fact</field>
         <field name="arch" type="xml">
-            <list string="Odoo Facts" editable="bottom">
+            <tree string="Odoo Facts" editable="bottom">
                 <field name="fact"/>
                 <field name="category"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

@@ -47,7 +47,10 @@
                         <field name="message" readonly="1" nolabel="1"/>
                     </group>
                 </sheet>
-                <chatter/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
@@ -57,7 +60,7 @@
         <field name="name">chess.invitation.list</field>
         <field name="model">chess.invitation</field>
         <field name="arch" type="xml">
-            <list string="Chess Invitations" create="false">
+            <tree string="Chess Invitations" create="false">
                 <field name="inviter_id"/>
                 <field name="invitee_id"/>
                 <field name="color_choice"/>
@@ -66,7 +69,7 @@
                        decoration-danger="state in ('declined', 'cancelled')"
                        widget="badge"/>
                 <field name="create_date"/>
-            </list>
+            </tree>
         </field>
     </record>
 

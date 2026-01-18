@@ -7,7 +7,7 @@
         <field name="model">res.users</field>
         <field name="priority">100</field>
         <field name="arch" type="xml">
-            <list string="Chess Leaderboard" default_order="chess_rating desc"
+            <tree string="Chess Leaderboard" default_order="chess_rating desc"
                   create="0" delete="0" edit="0">
                 <field name="name"/>
                 <field name="chess_rating" string="Rating"/>
@@ -15,7 +15,7 @@
                 <field name="chess_losses" string="Losses"/>
                 <field name="chess_draws" string="Draws"/>
                 <field name="chess_games_played" string="Games"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -34,29 +34,31 @@
                 <field name="chess_games_played"/>
                 <field name="image_128"/>
                 <templates>
-                    <t t-name="card">
-                        <div class="d-flex align-items-center">
-                            <field name="image_128" widget="image" class="o_kanban_image me-3"
-                                   options="{'preview_image': 'image_128'}"/>
-                            <div class="flex-grow-1">
-                                <div class="o_kanban_record_title fw-bold">
-                                    <field name="name"/>
-                                </div>
-                                <div class="o_kanban_record_subtitle">
-                                    <span class="badge bg-primary fs-5">
-                                        <field name="chess_rating"/> ELO
-                                    </span>
-                                </div>
-                                <div class="mt-2 text-muted small">
-                                    <span class="text-success me-2">
-                                        <i class="fa fa-trophy" title="Wins"/> <field name="chess_wins"/> W
-                                    </span>
-                                    <span class="text-danger me-2">
-                                        <i class="fa fa-times" title="Losses"/> <field name="chess_losses"/> L
-                                    </span>
-                                    <span class="text-secondary">
-                                        <i class="fa fa-minus" title="Draws"/> <field name="chess_draws"/> D
-                                    </span>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                            <div class="d-flex align-items-center">
+                                <field name="image_128" widget="image" class="o_kanban_image me-3"
+                                       options="{'preview_image': 'image_128'}"/>
+                                <div class="flex-grow-1">
+                                    <div class="o_kanban_record_title fw-bold">
+                                        <field name="name"/>
+                                    </div>
+                                    <div class="o_kanban_record_subtitle">
+                                        <span class="badge bg-primary fs-5">
+                                            <field name="chess_rating"/> ELO
+                                        </span>
+                                    </div>
+                                    <div class="mt-2 text-muted small">
+                                        <span class="text-success me-2">
+                                            <i class="fa fa-trophy" title="Wins"/> <field name="chess_wins"/> W
+                                        </span>
+                                        <span class="text-danger me-2">
+                                            <i class="fa fa-times" title="Losses"/> <field name="chess_losses"/> L
+                                        </span>
+                                        <span class="text-secondary">
+                                            <i class="fa fa-minus" title="Draws"/> <field name="chess_draws"/> D
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -88,10 +90,10 @@
     <record id="action_chess_leaderboard" model="ir.actions.act_window">
         <field name="name">Leaderboard</field>
         <field name="res_model">res.users</field>
-        <field name="view_mode">kanban,list</field>
+        <field name="view_mode">kanban,tree</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_chess_leaderboard_kanban')}),
-            (0, 0, {'view_mode': 'list', 'view_id': ref('view_chess_leaderboard_list')})]"/>
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_chess_leaderboard_list')})]"/>
         <field name="domain">[('chess_games_played', '>', 0), ('share', '=', False)]</field>
         <field name="context">{'search_default_has_played': 1}</field>
         <field name="help" type="html">
@@ -131,7 +133,7 @@
     <record id="action_chess_statistics" model="ir.actions.act_window">
         <field name="name">Game Statistics</field>
         <field name="res_model">chess.game</field>
-        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_mode">graph,pivot,tree</field>
         <field name="domain">[('state', '=', 'completed')]</field>
         <field name="context">{'search_default_my_games': 1}</field>
     </record>

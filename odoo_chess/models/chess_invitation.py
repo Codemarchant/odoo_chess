@@ -233,7 +233,7 @@ class ChessInvitation(models.Model):
         # Pin the channel for both users so chat popup appears for both
         channel.sudo().channel_member_ids.filtered(
             lambda m: m.partner_id.id in partner_ids
-        ).write({'unpin_dt': False})
+        ).write({'fold_state': 'open'})
 
         # Broadcast to both partners to open the chat
         channel._broadcast(partner_ids)
