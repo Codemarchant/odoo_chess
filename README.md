@@ -1,13 +1,15 @@
 # Odoo Chess
 
-A fully integrated multiplayer chess game module for Odoo 19. Challenge colleagues, play against AI bots, and compete on the leaderboard!
+A fully integrated multiplayer chess game module for Odoo 19. Challenge colleagues, play against computer bots, and compete on the leaderboard!
 
 ![Odoo Chess Banner](odoo_chess/static/description/banner.png)
+
+![Human vs Human Gameplay](odoo_chess/static/description/human_vs_human_playing_chess.gif)
 
 ## Features
 
 - **Real-Time Multiplayer** - Challenge any Odoo user with instant move synchronization via Odoo's longpolling bus
-- **AI Bot Opponents** - Practice against 4 difficulty levels:
+- **Bot Opponents** - Practice against 4 difficulty levels powered by the Sunfish chess engine:
   - Beginner Bob (800 Elo)
   - Casual Carl (1200 Elo)
   - Serious Sam (1500 Elo)
@@ -40,11 +42,25 @@ A fully integrated multiplayer chess game module for Odoo 19. Challenge colleagu
 
 3. Update your Odoo apps list and install "Odoo Chess" from the Apps menu.
 
+## Security Groups
+
+### Chess Player
+- Play chess games against humans and bots
+- View the leaderboard
+- Send and receive game invitations
+- Access only their own games and invitations
+
+### Chess Manager
+- All Chess Player permissions
+- **Spectate any ongoing game** - Watch live games between other players
+- Manage bot configurations
+- Manage Odoo Fun Facts
+- Delete games and invitations
+
 ## Technical Details
 
-- Server-side move validation with python-chess library
+- Server-side move validation with the `chess` library
 - OWL components with chessboard.js integration
-- Chess Player and Chess Manager security groups
 - Mail thread integration for game comments
 - FEN/PGN notation tracking for complete game history
 
