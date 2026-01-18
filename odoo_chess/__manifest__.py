@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Odoo Chess',
-    'version': '19.0.1.0.0',
+    'version': '18.0.1.0.0',
     'category': 'Productivity',
     'summary': 'Play chess against colleagues or AI bots with Elo ratings, time controls, and leaderboards',
     'description': """

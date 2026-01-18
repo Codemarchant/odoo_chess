@@ -228,7 +228,7 @@ class ChessInvitation(models.Model):
 
         # Get or create chat channel between the two players
         partner_ids = [self.inviter_id.partner_id.id, self.invitee_id.partner_id.id]
-        channel = self.env['discuss.channel']._get_or_create_chat(partner_ids)
+        channel = self.env['discuss.channel'].channel_get(partner_ids)
 
         # Pin the channel for both users so chat popup appears for both
         channel.sudo().channel_member_ids.filtered(

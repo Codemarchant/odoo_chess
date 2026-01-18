@@ -7,26 +7,19 @@
         <field name="sequence">100</field>
     </record>
 
-    <!-- Groups Privilege (Odoo 19 structure) -->
-    <record model="res.groups.privilege" id="res_groups_privilege_chess">
-        <field name="name">Odoo Chess</field>
-        <field name="sequence">50</field>
-        <field name="category_id" ref="module_category_chess"/>
-    </record>
-
     <!-- Security Groups -->
     <record id="group_chess_user" model="res.groups">
         <field name="name">Chess Player</field>
-        <field name="privilege_id" ref="res_groups_privilege_chess"/>
+        <field name="category_id" ref="module_category_chess"/>
         <field name="comment">Can play chess games, view leaderboard</field>
     </record>
 
     <record id="group_chess_manager" model="res.groups">
         <field name="name">Chess Manager</field>
-        <field name="privilege_id" ref="res_groups_privilege_chess"/>
+        <field name="category_id" ref="module_category_chess"/>
         <field name="comment">Can manage bots, view all games, manage facts</field>
         <field name="implied_ids" eval="[(4, ref('group_chess_user'))]"/>
-        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
     </record>
 
     <!-- Record Rules -->
