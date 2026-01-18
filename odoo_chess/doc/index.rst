@@ -17,7 +17,7 @@ Install via pip::
 Changelog
 =========
 
-Version 19.0.1.0.0
+Version 18.0.1.0.0
 ------------------
 
 * Initial release

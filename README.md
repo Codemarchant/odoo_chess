@@ -1,6 +1,6 @@
 # Odoo Chess
 
-A fully integrated multiplayer chess game module for Odoo 19. Challenge colleagues, play against computer bots, and compete on the leaderboard!
+A fully integrated multiplayer chess game module for Odoo 18. Challenge colleagues, play against computer bots, and compete on the leaderboard!
 
 ![Odoo Chess Banner](odoo_chess/static/description/banner.png)
 
@@ -25,7 +25,7 @@ A fully integrated multiplayer chess game module for Odoo 19. Challenge colleagu
 
 ## Requirements
 
-- Odoo 19.0
+- Odoo 18.0
 - Python `chess` library
 
 ## Installation
