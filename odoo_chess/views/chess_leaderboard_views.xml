@@ -49,13 +49,13 @@
                                 </div>
                                 <div class="mt-2 text-muted small">
                                     <span class="text-success me-2">
-                                        <i class="fa fa-trophy"/> <field name="chess_wins"/> W
+                                        <i class="fa fa-trophy" title="Wins"/> <field name="chess_wins"/> W
                                     </span>
                                     <span class="text-danger me-2">
-                                        <i class="fa fa-times"/> <field name="chess_losses"/> L
+                                        <i class="fa fa-times" title="Losses"/> <field name="chess_losses"/> L
                                     </span>
                                     <span class="text-secondary">
-                                        <i class="fa fa-minus"/> <field name="chess_draws"/> D
+                                        <i class="fa fa-minus" title="Draws"/> <field name="chess_draws"/> D
                                     </span>
                                 </div>
                             </div>

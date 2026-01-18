@@ -67,7 +67,6 @@ Requirements
             'odoo_chess/static/lib/chessboardjs/js/chessboard-1.0.0.min.js',
             'odoo_chess/static/lib/chessjs/chess.min.js',
             'odoo_chess/static/src/components/**/*',
-            'odoo_chess/static/src/sounds/**/*',
         ],
     },
     'images': ['static/description/banner.png'],

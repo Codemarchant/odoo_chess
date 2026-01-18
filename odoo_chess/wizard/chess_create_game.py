@@ -80,7 +80,6 @@ class ChessCreateGame(models.TransientModel):
     # Challenge message
     message = fields.Text(
         string='Challenge Message',
-        placeholder='Add a message to your challenge...'
     )
 
     @api.onchange('game_type')
