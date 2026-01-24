@@ -3,7 +3,18 @@
     'name': 'Odoo Chess',
     'version': '19.0.1.0.0',
     'category': 'Productivity',
-    'summary': 'Play chess against colleagues or AI bots with Elo ratings, time controls, and leaderboards',
+    'summary': '''Play chess against colleagues or AI bots with Elo ratings, time controls, and leaderboards.
+    chess, chess game, multiplayer chess, online chess, real-time chess, play chess, chess app, chess board,
+    board game, strategy game, puzzle game, brain game, mind game, logic game, thinking game,
+    team building, employee engagement, workplace fun, office game, company game, colleague game, coworker game,
+    elo rating, elo system, leaderboard, ranking, competition, tournament, match, challenge, pvp, player vs player,
+    ai bot, computer opponent, chess bot, chess ai, chess engine, beginner, intermediate, advanced, expert,
+    bullet chess, blitz chess, rapid chess, classical chess, time control, chess clock, increment,
+    employee wellness, team bonding, break time, lunch break, fun at work, gamification, employee morale,
+    odoo game, odoo chess, odoo fun, odoo productivity, odoo team, odoo employee, odoo hr,
+    pgn, fen, chess notation, game history, chess move, castling, checkmate, stalemate, draw,
+    lichess alternative, chess.com alternative, corporate chess, business chess, enterprise chess,
+    odoo19, odoo 19''',
     'description': """
 Odoo Chess - Multiplayer Chess Game
 ===================================
